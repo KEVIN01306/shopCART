@@ -10,13 +10,13 @@ import type {
     ContactSubmissionSummary,
 } from "../../domain/contact.entity.js";
 
+type ContactSubmissionWithForm = PrismaFormSubmission & {
+    form?: Pick<PrismaForm, "id" | "name" | "slug"> | null;
+};
+
 type PrismaContactWithRelations = PrismaContact & {
-    website?: PrismaWebsite | null;
-    submissions?: Array<
-        PrismaFormSubmission & {
-            form?: PrismaForm | null;
-        }
-    >;
+    website?: Pick<PrismaWebsite, "id" | "name" | "domain"> | null;
+    submissions?: Array<ContactSubmissionWithForm>;
     _count?: {
         submissions?: number;
     };
@@ -36,7 +36,7 @@ export class ContactMapper {
 
         let submissions: ContactSubmissionSummary[] | undefined = undefined;
         if (raw.submissions && Array.isArray(raw.submissions)) {
-            submissions = raw.submissions.map((sub: PrismaFormSubmission & { form?: PrismaForm | null }) => ({
+            submissions = raw.submissions.map((sub: ContactSubmissionWithForm) => ({
                 id: sub.id,
                 formId: sub.formId,
                 formName: sub.form?.name,
