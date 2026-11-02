@@ -1,11 +1,9 @@
 import {
-    DashboardOutlined,
-    LanguageOutlined,
-    ContactsOutlined,
+    StorefrontOutlined,
+    ShoppingCartOutlined,
+    Inventory2Outlined,
     GroupOutlined,
-    AdminPanelSettingsOutlined,
-    ManageHistoryOutlined,
-    ShieldOutlined,
+    PersonOutlineOutlined,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -15,64 +13,51 @@ export interface MenuItem {
     group?: string;
     link?: string;
     icon?: ElementType;
-    permissions?: string[];
-    requiresStudent?: boolean;
-    requiresTeacher?: boolean;
+    roles?: string[];
+    requiresAuth?: boolean;
     children?: MenuItem[];
 }
 
 const MenuItems: MenuItem[] = [
-    { group: 'Main' },
+    { group: 'Tienda shopCART' },
     {
-        name: 'Dashboard',
-        icon: DashboardOutlined,
-        link: '/',
+        module: 'Shop',
+        name: 'Catálogo de Tienda',
+        icon: StorefrontOutlined,
+        link: '/shop',
+    },
+    {
+        module: 'Cart',
+        name: 'Carrito de Compras',
+        icon: ShoppingCartOutlined,
+        link: '/cart',
     },
 
-    { group: 'Sites & Audience', permissions: ['websites:read', 'contacts:read'] },
+    { group: 'Gestión Comercial', roles: ['Administrador', 'Operador'] },
     {
-        module: 'Websites',
-        name: 'Websites',
-        icon: LanguageOutlined,
-        link: '/websites',
-        permissions: ['websites:read'],
-    },
-    {
-        module: 'Contacts',
-        name: 'Contacts',
-        icon: ContactsOutlined,
-        link: '/contacts',
-        permissions: ['contacts:read'],
+        module: 'Products',
+        name: 'Productos y Variantes',
+        icon: Inventory2Outlined,
+        link: '/products',
+        roles: ['Administrador', 'Operador'],
     },
 
-    { group: 'Administration', permissions: ['users:read', 'roles:read', 'audit:read', 'roles:permissions:update'] },
+    { group: 'Administración', roles: ['Administrador'] },
     {
         module: 'Users',
-        name: 'Users Management',
+        name: 'Usuarios',
         icon: GroupOutlined,
         link: '/users',
-        permissions: ['users:read'],
-    },
-    {
-        module: 'Roles',
-        name: 'Roles & Permissions',
-        icon: ShieldOutlined,
-        link: '/roles',
-        permissions: ['roles:read', 'roles:permissions:update'],
-    },
-    {
-        module: 'Audit',
-        name: 'Audit Logs',
-        icon: ManageHistoryOutlined,
-        link: '/audit-logs',
-        permissions: ['audit:read'],
+        roles: ['Administrador'],
     },
 
-    { group: 'Account' },
+    { group: 'Cuenta', requiresAuth: true },
     {
-        name: 'My Profile',
-        icon: AdminPanelSettingsOutlined,
+        module: 'Profile',
+        name: 'Mi Perfil',
+        icon: PersonOutlineOutlined,
         link: '/profile',
+        requiresAuth: true,
     },
 ];
 

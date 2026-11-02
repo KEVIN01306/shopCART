@@ -1,101 +1,128 @@
 import type { PaletteOptions } from '@mui/material/styles';
 
 /**
- * Design system palette — Calendly-inspired "Navy ink on cool marble"
- * Source: DESIGN.md
+ * Design system palette — Ecom Marketplace
  *
- * Key rules:
- * - Never use #000000 — always Ink Navy or Slate Gray for text
- * - All elevation shadows must be blue-tinted (never rgba(0,0,0,...))
- * - Signal Blue exclusively for primary CTA fills and active states
- * - Ink Navy for secondary dark buttons, nav links, headings
+ * Reglas clave:
+ * - Primary Navy / Slate (#425A8B): Títulos de productos, encabezados, precios principales, bordes de botones Add To Cart y navegación.
+ * - Secondary / Accent Orange (#FD9636): Badges de descuento (-17%), estrellas de calificación (★★★★★), slider de rango de precio, checkboxes activos, bordes de variante seleccionada (Color, Style, Size).
+ * - Superficies: Fondo general #F8FAFC / #FFFFFF, barra de breadcrumbs y badges de conteo en #F0F3F8, tarjetas en #FFFFFF con borde 1px solid #D5DFE4.
+ * - Texto: Primario en #425A8B, secundario en #66789C, terciario/tachado en #8C9EC5.
  */
 export const palette: PaletteOptions = {
     mode: 'light',
 
     primary: {
-        main: '#006bff',       // Signal Blue — primary CTA fill, active nav, selected states
-        light: '#3d8eff',
-        dark: '#0052cc',
-        contrastText: '#ffffff',
+        main: '#425A8B',       // Ecom Primary Navy / Slate
+        light: '#66789C',      // Slate Light
+        dark: '#2B3E66',       // Deep Navy
+        contrastText: '#FFFFFF',
     },
 
     secondary: {
-        main: '#0b3558',       // Ink Navy — secondary dark buttons, headings, nav links
-        light: '#1a4f7a',
-        dark: '#07243c',
-        contrastText: '#ffffff',
+        main: '#FD9636',       // Ecom Accent Orange
+        light: '#FFF3E6',      // Soft Orange Wash
+        dark: '#E07B1B',       // Deep Orange
+        contrastText: '#FFFFFF',
     },
 
     background: {
-        default: '#f8f9fb',    // Cloud — page canvas, footer surface
-        paper: '#ffffff',      // Paper — card surfaces, elevated panels
+        default: '#F8FAFC',    // Clean Storefront Canvas
+        paper: '#FFFFFF',      // Pure White Card Surface
     },
 
     text: {
-        primary: '#0b3558',    // Ink Navy — all primary text, never #000000
-        secondary: '#476788',  // Slate Gray — secondary body copy, helper text
-        disabled: '#a6bbd1',   // Mist Gray — disabled text, inactive labels
+        primary: '#425A8B',    // Ecom Navy Primary Text
+        secondary: '#66789C',  // Ecom Slate Secondary Text
+        disabled: '#8C9EC5',   // Muted Blue-Gray (strikethrough prices, counters, disabled)
     },
 
-    divider: '#d4e0ed',        // Hairline — card/input borders, dividers
+    divider: '#D5DFE4',        // Ecom Card & Section Border
 
     error: {
-        main: '#d93025',
-        light: '#e57373',
-        dark: '#b71c1c',
-        contrastText: '#ffffff',
+        main: '#EF4444',
+        light: '#FEE2E2',
+        dark: '#B91C1C',
+        contrastText: '#FFFFFF',
     },
 
     warning: {
-        main: '#f59e0b',
-        light: '#fcd34d',
-        dark: '#b45309',
-        contrastText: '#0b3558',
+        main: '#FD9636',
+        light: '#FFF3E6',
+        dark: '#E07B1B',
+        contrastText: '#FFFFFF',
     },
 
     success: {
-        main: '#10b981',
-        light: '#6ee7b7',
+        main: '#10B981',
+        light: '#D1FAE5',
         dark: '#047857',
-        contrastText: '#ffffff',
+        contrastText: '#FFFFFF',
     },
 
     info: {
-        main: '#004eba',       // Deep Cobalt — badge text, info labels
-        light: '#3d6fd9',
-        dark: '#003a8c',
-        contrastText: '#ffffff',
+        main: '#425A8B',
+        light: '#F0F3F8',
+        dark: '#2B3E66',
+        contrastText: '#FFFFFF',
     },
 
     action: {
-        hover: '#f0f3f8',      // Pebble — hover wash on interactive surfaces
-        selected: '#e6f0ff',   // Pebble-tinted — selected state background
-        disabledBackground: '#f0f3f8',
-        disabled: '#a6bbd1',
+        hover: '#F0F3F8',
+        selected: '#FFF3E6',
+        disabledBackground: '#F0F3F8',
+        disabled: '#8C9EC5',
     },
 };
 
 /**
- * Extended palette tokens for direct use in sx props via theme.palette.design.*
- * Declared here for reference; used in theme.ts via custom CSS vars.
+ * Extended Ecom Marketplace design tokens for direct use in theme.ts and sx props.
+ * Includes backwards-compatible alias keys so all existing modules work seamlessly.
  */
 export const designTokens = {
-    inkNavy: '#0b3558',
-    signalBlue: '#006bff',
-    slateGray: '#476788',
-    mistGray: '#a6bbd1',
-    cloud: '#f8f9fb',
-    paper: '#ffffff',
-    pebble: '#f0f3f8',
-    hairline: '#d4e0ed',
-    carbon: '#0a0a0a',
-    coralMagenta: '#e55cff',
-    skyCyan: '#0099ff',
-    deepCobalt: '#004eba',
+    // Ecom Marketplace canonical tokens
+    navyPrimary: '#425A8B',
+    navyDark: '#2B3E66',
+    slateSecondary: '#66789C',
+    mutedBlue: '#8C9EC5',
+    orangeAccent: '#FD9636',
+    orangeDark: '#E07B1B',
+    orangeLight: '#FFF3E6',
+    cardBorder: '#D5DFE4',
+    softDivider: '#E5E9F2',
+    softWash: '#F0F3F8',
 
-    // Shadows — blue-tinted only (never rgba(0,0,0,...))
-    shadowSm:  'rgba(71,103,136,0.04) 0px 4px 5px 0px, rgba(71,103,136,0.03) 0px 4px 10px 0px, rgba(71,103,136,0.05) 0px 10px 20px 0px',
-    shadowMd:  'rgba(71,103,136,0.04) 0px 4px 5px 0px, rgba(71,103,136,0.03) 0px 8px 15px 0px, rgba(71,103,136,0.08) 0px 30px 50px 0px',
-    shadowBtn: 'rgba(71,103,136,0.04) 0px 4px 5px 0px, rgba(71,103,136,0.03) 0px 8px 15px 0px, rgba(71,103,136,0.06) 0px 15px 30px 0px',
+    // Mapped legacy tokens to Ecom Marketplace equivalents
+    stoneCanvas: '#F8FAFC',
+    pureWhite: '#FFFFFF',
+    stoneBorder: '#D5DFE4',
+    stoneMuted: '#8C9EC5',
+    ashGray: '#8C9EC5',
+    warmGray: '#66789C',
+    inkBlack: '#425A8B',
+    soot: '#2B3E66',
+    skyWash: '#F0F3F8',
+    cyanSignal: '#425A8B',
+    cyanEdge: '#2B3E66',
+
+    // Ecom clean shadows
+    shadowMd: '0 10px 25px rgba(66, 90, 139, 0.08)',
+    shadowSm: '0 4px 12px rgba(66, 90, 139, 0.05)',
+    shadowSubtle: '0 1px 3px rgba(66, 90, 139, 0.04)',
+    shadowXl: '0 16px 40px rgba(66, 90, 139, 0.14)',
+
+    // Additional legacy aliases
+    inkNavy: '#425A8B',
+    signalBlue: '#425A8B',
+    slateGray: '#66789C',
+    mistGray: '#8C9EC5',
+    cloud: '#F8FAFC',
+    paper: '#FFFFFF',
+    pebble: '#F0F3F8',
+    hairline: '#D5DFE4',
+    carbon: '#2B3E66',
+    coralMagenta: '#FD9636',
+    skyCyan: '#425A8B',
+    deepCobalt: '#2B3E66',
+    shadowBtn: '0 2px 6px rgba(66, 90, 139, 0.08)',
 } as const;

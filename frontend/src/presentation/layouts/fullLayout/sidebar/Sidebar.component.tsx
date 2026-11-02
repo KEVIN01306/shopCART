@@ -24,51 +24,64 @@ const SidebarContent: React.FC = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 height: '100%',
-                backgroundColor: '#ffffff',
-                borderRight: '1px solid #e2e8f0',
+                backgroundColor: '#FFFFFF',
+                borderRight: '1px solid #D5DFE4',
                 overflowX: 'hidden',
             }}
         >
-            {/* Header with Logo */}
+            {/* Header with shopCART Logo */}
             <Stack
                 direction="row"
                 sx={{
                     alignItems: 'center',
                     justifyContent: isCollapsed ? 'center' : 'flex-start',
-                    gap: 1.5,
+                    gap: 1.25,
                     px: isCollapsed ? 1 : 2.5,
-                    minHeight: 64,
-                    borderBottom: '1px solid #e2e8f0',
+                    minHeight: 68,
+                    borderBottom: '1px solid #D5DFE4',
                 }}
             >
-                {/* Logo Mark */}
                 <Box
                     component="img"
                     src="/logo.png"
+                    alt="shopCART"
                     sx={{
                         width: 32,
                         height: 32,
-                        borderRadius: '8px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
+                        objectFit: 'contain',
                         flexShrink: 0,
                     }}
                 />
 
                 {!isCollapsed && (
-                    <Typography
-                        variant="h6"
-                        noWrap
-                        sx={{
-                            fontWeight: 700,
-                            color: '#0b3558',
-                            fontSize: '1.05rem',
-                            letterSpacing: '-0.3px',
-                        }}
-                    >
-                        Cad Import Inc
-                    </Typography>
+                    <Box>
+                        <Typography
+                            noWrap
+                            sx={{
+                                fontWeight: 800,
+                                color: '#425A8B',
+                                fontSize: '16px',
+                                letterSpacing: '-0.2px',
+                                lineHeight: 1.2,
+                            }}
+                        >
+                            shop
+                            <Box component="span" sx={{ color: '#FD9636' }}>
+                                CART
+                            </Box>
+                        </Typography>
+                        <Typography
+                            noWrap
+                            sx={{
+                                color: '#8C9EC5',
+                                fontSize: '11px',
+                                fontWeight: 500,
+                                lineHeight: 1.2,
+                            }}
+                        >
+                            Marketplace · GTQ
+                        </Typography>
+                    </Box>
                 )}
             </Stack>
 
@@ -79,9 +92,8 @@ const SidebarContent: React.FC = () => {
                 ))}
             </List>
 
-            <Divider sx={{ borderColor: '#e2e8f0' }} />
+            <Divider sx={{ borderColor: '#D5DFE4' }} />
 
-            {/* Footer version */}
             <Box
                 sx={{
                     px: isCollapsed ? 1 : 2.5,
@@ -89,8 +101,8 @@ const SidebarContent: React.FC = () => {
                     textAlign: isCollapsed ? 'center' : 'left',
                 }}
             >
-                <Typography variant="caption" sx={{ color: '#94a3b8', fontSize: '11px' }}>
-                    {isCollapsed ? 'v1' : 'Cad Import Inc v1.0'}
+                <Typography variant="caption" sx={{ color: '#8C9EC5', fontSize: '11px' }}>
+                    {isCollapsed ? 'v2' : 'shopCART v2.0 · GTQ'}
                 </Typography>
             </Box>
         </Box>
@@ -111,7 +123,6 @@ export const Sidebar: React.FC = () => {
                 transition: 'width 0.25s ease',
             }}
         >
-            {/* Mobile Drawer (Slide in from left over content) */}
             <Drawer
                 variant="temporary"
                 open={isMobileOpen}
@@ -122,14 +133,14 @@ export const Sidebar: React.FC = () => {
                     '& .MuiDrawer-paper': {
                         width: SIDEBAR_EXPANDED_WIDTH,
                         boxSizing: 'border-box',
-                        boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+                        boxShadow: '0 16px 40px rgba(66, 90, 139, 0.14)',
+                        border: 'none',
                     },
                 }}
             >
                 <SidebarContent />
             </Drawer>
 
-            {/* Desktop Permanent Drawer (Mini collapsed or expanded) */}
             <Drawer
                 variant="permanent"
                 sx={{
@@ -139,6 +150,7 @@ export const Sidebar: React.FC = () => {
                         boxSizing: 'border-box',
                         transition: 'width 0.25s ease',
                         overflowX: 'hidden',
+                        border: 'none',
                     },
                 }}
                 open

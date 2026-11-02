@@ -5,13 +5,14 @@ import { FullPageLoader } from '../../shared/components/loaders';
 import { refreshSession } from '../../modules/auth/infrastructure/services/auth.service';
 
 /**
- * ProtectedRoute — global authentication guard.
+ * ProtectedRoute — authentication guard for private routes (/profile, /users).
  *
  * Responsibilities:
  * 1. If accessToken exists but user is null (page reload), restores session via refreshSession().
- * 2. Shows FullPageLoader during session restoration.
+ * 2. Shows FullPageLoader while session is being restored.
  * 3. If no token or refresh fails, redirects to /auth/login preserving location state.
- * 4. Once user and accessToken are present, renders child routes (FullLayout + module routes).
+ * 4. Redirects to /auth/verify-account if user.isVerify === false.
+ * 5. Once authenticated, renders child routes.
  */
 const ProtectedRoute = () => {
     const location = useLocation();
@@ -21,12 +22,11 @@ const ProtectedRoute = () => {
         isRestoringSession,
         setAuth,
         setIsRestoringSession,
-        clearAuth
+        clearAuth,
     } = useAuthStore();
 
     useEffect(() => {
         const restoreSession = async () => {
-            // Only restore if we have an accessToken and no user in memory
             if (accessToken && !user && !isRestoringSession) {
                 setIsRestoringSession(true);
                 try {
@@ -43,8 +43,8 @@ const ProtectedRoute = () => {
         restoreSession();
     }, [accessToken, user, isRestoringSession, setAuth, setIsRestoringSession, clearAuth]);
 
-    if (isRestoringSession) {
-        return <FullPageLoader message="Restoring session..." />;
+    if (isRestoringSession || (accessToken && !user)) {
+        return <FullPageLoader message="Restaurando sesión..." />;
     }
 
     if (!accessToken) {
@@ -57,7 +57,6 @@ const ProtectedRoute = () => {
         );
     }
 
-    // Mandatory account activation check
     if (user && user.isVerify === false) {
         return (
             <Navigate

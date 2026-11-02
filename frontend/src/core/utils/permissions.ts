@@ -1,114 +1,128 @@
-import type { AuthUser } from '../../modules/auth/domain/interfaces/auth.interfaces';
+import type { AuthUser, SystemRole } from '../../modules/auth/domain/interfaces/auth.interfaces';
+
+export const SYSTEM_ROLES: readonly SystemRole[] = [
+    'Cliente',
+    'Operador',
+    'Administrador',
+] as const;
 
 /**
- * Normalizes a permission string to check both canonical ('module:action')
- * and inverted ('action:module') forms if applicable.
+ * Extracts normalized role names from an AuthUser object or a role string/array.
  */
-const getPermissionVariants = (permission: string): string[] => {
-    if (!permission) return [];
-    if (!permission.includes(':')) return [permission];
+export const extractUserRoles = (
+    userOrRoles: AuthUser | string | string[] | null | undefined
+): string[] => {
+    if (!userOrRoles) return [];
 
-    const [part1, part2] = permission.split(':');
-    return [permission, `${part2}:${part1}`];
+    if (typeof userOrRoles === 'string') {
+        return [userOrRoles];
+    }
+
+    if (Array.isArray(userOrRoles)) {
+        return userOrRoles.filter(Boolean);
+    }
+
+    if (typeof userOrRoles === 'object') {
+        const user = userOrRoles as AuthUser;
+        const rolesSet = new Set<string>();
+
+        if (user.role) {
+            rolesSet.add(user.role);
+        }
+        if (Array.isArray(user.roles)) {
+            user.roles.forEach((r) => {
+                if (r) rolesSet.add(r);
+            });
+        }
+        return Array.from(rolesSet);
+    }
+
+    return [];
 };
 
 /**
- * Helper to extract user permissions and check for SUPER_ADMIN role bypass.
+ * Checks if the user has a specific required role (case-insensitive).
+ * Note: 'Administrador' also matches legacy 'ADMIN' / 'SUPER_ADMIN' if present.
  */
-const extractUserPermissions = (
-    userOrPermissions: AuthUser | string[] | null | undefined
-): { isSuperAdmin: boolean; permissions: string[] } => {
-    if (!userOrPermissions) {
-        return { isSuperAdmin: false, permissions: [] };
+export const hasRole = (
+    userOrRoles: AuthUser | string | string[] | null | undefined,
+    requiredRole: string
+): boolean => {
+    if (!requiredRole) return true;
+
+    const roles = extractUserRoles(userOrRoles).map((r) => r.toLowerCase());
+    if (roles.length === 0) return false;
+
+    const target = requiredRole.toLowerCase();
+
+    if (target === 'administrador') {
+        return (
+            roles.includes('administrador') ||
+            roles.includes('admin') ||
+            roles.includes('super_admin')
+        );
     }
 
-    // When an AuthUser object is provided
-    if (typeof userOrPermissions === 'object' && !Array.isArray(userOrPermissions)) {
-        const user = userOrPermissions as AuthUser;
-        const isSuperAdmin =
-            user.role === 'SUPER_ADMIN' ||
-            Boolean(user.roles && user.roles.includes('SUPER_ADMIN'));
-
-        return {
-            isSuperAdmin,
-            permissions: Array.isArray(user.permissions) ? user.permissions : [],
-        };
-    }
-
-    // When an array of permission strings is provided directly
-    if (Array.isArray(userOrPermissions)) {
-        return {
-            isSuperAdmin: false,
-            permissions: userOrPermissions,
-        };
-    }
-
-    return { isSuperAdmin: false, permissions: [] };
+    return roles.includes(target);
 };
 
 /**
- * Checks if the user has a specific required permission.
- *
- * @param userOrPermissions - The AuthUser object or an array of user permissions.
- * @param requiredPermission - The permission string to verify (e.g., 'users:create').
- * @returns true if the user possesses the permission or is a SUPER_ADMIN.
+ * Checks if the user has AT LEAST ONE of the required roles.
+ */
+export const hasSomeRole = (
+    userOrRoles: AuthUser | string | string[] | null | undefined,
+    requiredRoles?: string[]
+): boolean => {
+    if (!requiredRoles || requiredRoles.length === 0) return true;
+    return requiredRoles.some((role) => hasRole(userOrRoles, role));
+};
+
+/**
+ * Checks if the user has ALL of the required roles.
+ */
+export const hasEveryRole = (
+    userOrRoles: AuthUser | string | string[] | null | undefined,
+    requiredRoles?: string[]
+): boolean => {
+    if (!requiredRoles || requiredRoles.length === 0) return true;
+    return requiredRoles.every((role) => hasRole(userOrRoles, role));
+};
+
+export const isAdmin = (user: AuthUser | null | undefined): boolean =>
+    hasRole(user, 'Administrador');
+
+export const isOperator = (user: AuthUser | null | undefined): boolean =>
+    hasRole(user, 'Operador');
+
+export const isClient = (user: AuthUser | null | undefined): boolean =>
+    hasRole(user, 'Cliente');
+
+/**
+ * Backwards-compatible aliases that delegate to role checks or Administrador check.
  */
 export const hasPermission = (
-    userOrPermissions: AuthUser | string[] | null | undefined,
-    requiredPermission: string
+    userOrRoles: AuthUser | string[] | null | undefined,
+    requiredRoleOrPerm: string
 ): boolean => {
-    if (!requiredPermission) return true;
-
-    const { isSuperAdmin, permissions } = extractUserPermissions(userOrPermissions);
-    if (isSuperAdmin) return true;
-    if (permissions.length === 0) return false;
-
-    const variants = getPermissionVariants(requiredPermission);
-    return variants.some((v) => permissions.includes(v));
+    if (!requiredRoleOrPerm) return true;
+    if (hasRole(userOrRoles, 'Administrador')) return true;
+    return hasRole(userOrRoles, requiredRoleOrPerm);
 };
 
-/**
- * Checks if the user has AT LEAST ONE of the required permissions (logical OR / checkPermissionSome).
- *
- * @param userOrPermissions - The AuthUser object or an array of user permissions.
- * @param requiredPermissions - Array of permissions where at least one must match.
- * @returns true if the user has any of the listed permissions or is a SUPER_ADMIN.
- */
 export const hasSomePermission = (
-    userOrPermissions: AuthUser | string[] | null | undefined,
-    requiredPermissions: string[]
+    userOrRoles: AuthUser | string[] | null | undefined,
+    requiredRolesOrPerms: string[]
 ): boolean => {
-    if (!requiredPermissions || requiredPermissions.length === 0) return true;
-
-    const { isSuperAdmin, permissions } = extractUserPermissions(userOrPermissions);
-    if (isSuperAdmin) return true;
-    if (permissions.length === 0) return false;
-
-    return requiredPermissions.some((requiredPerm) => {
-        const variants = getPermissionVariants(requiredPerm);
-        return variants.some((v) => permissions.includes(v));
-    });
+    if (!requiredRolesOrPerms || requiredRolesOrPerms.length === 0) return true;
+    if (hasRole(userOrRoles, 'Administrador')) return true;
+    return hasSomeRole(userOrRoles, requiredRolesOrPerms);
 };
 
-/**
- * Checks if the user has ALL of the specified permissions (logical AND).
- *
- * @param userOrPermissions - The AuthUser object or an array of user permissions.
- * @param requiredPermissions - Array of permissions that must all match.
- * @returns true if the user has every listed permission or is a SUPER_ADMIN.
- */
 export const hasEveryPermission = (
-    userOrPermissions: AuthUser | string[] | null | undefined,
-    requiredPermissions: string[]
+    userOrRoles: AuthUser | string[] | null | undefined,
+    requiredRolesOrPerms: string[]
 ): boolean => {
-    if (!requiredPermissions || requiredPermissions.length === 0) return true;
-
-    const { isSuperAdmin, permissions } = extractUserPermissions(userOrPermissions);
-    if (isSuperAdmin) return true;
-    if (permissions.length === 0) return false;
-
-    return requiredPermissions.every((requiredPerm) => {
-        const variants = getPermissionVariants(requiredPerm);
-        return variants.some((v) => permissions.includes(v));
-    });
+    if (!requiredRolesOrPerms || requiredRolesOrPerms.length === 0) return true;
+    if (hasRole(userOrRoles, 'Administrador')) return true;
+    return hasEveryRole(userOrRoles, requiredRolesOrPerms);
 };

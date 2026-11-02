@@ -1,118 +1,138 @@
 import type { TypographyVariantsOptions } from '@mui/material/styles';
 
 /**
- * Typography — Calendly DESIGN.md
+ * Typography — Ecom Marketplace
  *
- * Font: Manrope (substitute for Gilroy — same geometric humanist sans, wide apertures, even stroke contrast)
- * Loaded via Google Fonts in index.css
- *
- * Scale from DESIGN.md:
- *   caption     12px / 1.5   / 500
- *   body-sm     14px / 1.4   / 400–500
- *   body        16px / 1.6   / 400   (line-height lifted to 1.6 for MUI body comfort)
- *   button      18px / 1.6   / 600
- *   body-lg     20px / 1.4   / 500
- *   subheading  28px / 1.4   / 600
- *   heading-sm  38px / 1.21  / 700
- *   heading     50px / 1.2   / 700
- *   heading-lg  68px / 1.2   / 700
- *   display     80px / 1.2   / 700
- *
- * MUI variant mapping:
- *   h1  → 50px / 700  (page-level hero heading)
- *   h2  → 38px / 700  (section heading)
- *   h3  → 28px / 600  (sub-section heading)
- *   h4  → 20px / 600  (card title)
- *   h5  → 18px / 600  (label heading, button weight)
- *   h6  → 14px / 600  (small label heading)
- *   subtitle1 → 16px / 500  (emphasized body)
- *   subtitle2 → 14px / 500  (secondary label)
- *   body1 → 16px / 400  (primary body copy)
- *   body2 → 14px / 400  (secondary body copy)
- *   caption → 12px / 500
- *   button  → 18px / 600  (all button labels)
+ * Enfoque:
+ * - Títulos y precios en azul marino (#425A8B) con pesos firmes (700 / 800) para alta legibilidad comercial.
+ * - Subtítulos, marcas y categorías en azul grisáceo (#66789C / #8C9EC5).
+ * - Cuerpo de texto claro y escaneable para especificaciones en viñetas y selectores de variantes.
  */
-export const typography: TypographyVariantsOptions = {
-    fontFamily: '"Manrope", "Segoe UI", ui-sans-serif, system-ui, sans-serif',
+const headingFontFamily =
+    "'Plus Jakarta Sans', 'Inter Tight', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif";
 
+const bodyFontFamily =
+    "'Inter', 'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif";
+
+export const typography: TypographyVariantsOptions = {
+    fontFamily: bodyFontFamily,
+
+    // Hero banner principal
     h1: {
-        fontSize: '3.125rem',     // 50px
-        fontWeight: 700,
-        lineHeight: 1.2,
-        letterSpacing: 'normal',
+        fontFamily: headingFontFamily,
+        fontSize: '2.5rem',       // 40px
+        fontWeight: 800,
+        lineHeight: 1.18,
+        letterSpacing: '-0.02em',
+        color: '#425A8B',
     },
+
+    // Título de producto en PDP (Captura 3)
     h2: {
-        fontSize: '2.375rem',     // 38px
+        fontFamily: headingFontFamily,
+        fontSize: '1.875rem',     // 30px
         fontWeight: 700,
-        lineHeight: 1.21,
-        letterSpacing: 'normal',
+        lineHeight: 1.25,
+        letterSpacing: '-0.015em',
+        color: '#425A8B',
     },
+
+    // Nombres de sección
     h3: {
-        fontSize: '1.75rem',      // 28px
-        fontWeight: 600,
-        lineHeight: 1.4,
-        letterSpacing: 'normal',
+        fontFamily: headingFontFamily,
+        fontSize: '1.375rem',     // 22px
+        fontWeight: 700,
+        lineHeight: 1.3,
+        letterSpacing: '-0.01em',
+        color: '#425A8B',
     },
+
+    // Nombres de producto en Product Cards (Capturas 1 y 2)
     h4: {
-        fontSize: '1.25rem',      // 20px
-        fontWeight: 600,
+        fontFamily: headingFontFamily,
+        fontSize: '0.9375rem',    // 15px
+        fontWeight: 700,
         lineHeight: 1.4,
-        letterSpacing: 'normal',
+        letterSpacing: '0em',
+        color: '#425A8B',
     },
+
+    // Títulos de widgets de filtro ("Product Categories", "Products Filter")
     h5: {
-        fontSize: '1.125rem',     // 18px
-        fontWeight: 600,
-        lineHeight: 1.6,
-        letterSpacing: 'normal',
+        fontFamily: headingFontFamily,
+        fontSize: '1.0625rem',    // 17px
+        fontWeight: 700,
+        lineHeight: 1.4,
+        letterSpacing: '0em',
+        color: '#425A8B',
     },
+
+    // Precios y subtítulos en cards
     h6: {
-        fontSize: '0.875rem',     // 14px
-        fontWeight: 600,
-        lineHeight: 1.4,
-        letterSpacing: 'normal',
+        fontFamily: headingFontFamily,
+        fontSize: '1.25rem',      // 20px
+        fontWeight: 800,
+        lineHeight: 1.3,
+        letterSpacing: '-0.01em',
+        color: '#425A8B',
     },
+
     subtitle1: {
-        fontSize: '1rem',         // 16px
-        fontWeight: 500,
-        lineHeight: 1.6,
-        letterSpacing: 'normal',
+        fontFamily: bodyFontFamily,
+        fontSize: '0.9375rem',    // 15px
+        fontWeight: 600,
+        lineHeight: 1.5,
+        color: '#425A8B',
     },
+
     subtitle2: {
-        fontSize: '0.875rem',     // 14px
-        fontWeight: 500,
-        lineHeight: 1.4,
-        letterSpacing: 'normal',
+        fontFamily: bodyFontFamily,
+        fontSize: '0.8125rem',    // 13px
+        fontWeight: 600,
+        lineHeight: 1.5,
+        color: '#66789C',
     },
+
     body1: {
-        fontSize: '1rem',         // 16px
+        fontFamily: bodyFontFamily,
+        fontSize: '0.9375rem',    // 15px
         fontWeight: 400,
         lineHeight: 1.6,
-        letterSpacing: 'normal',
+        color: '#425A8B',
     },
+
     body2: {
+        fontFamily: bodyFontFamily,
         fontSize: '0.875rem',     // 14px
         fontWeight: 400,
-        lineHeight: 1.4,
-        letterSpacing: 'normal',
+        lineHeight: 1.55,
+        color: '#66789C',
     },
+
     caption: {
+        fontFamily: bodyFontFamily,
         fontSize: '0.75rem',      // 12px
         fontWeight: 500,
-        lineHeight: 1.5,
-        letterSpacing: 'normal',
+        lineHeight: 1.4,
+        color: '#8C9EC5',
     },
+
     overline: {
-        fontSize: '0.75rem',      // 12px
-        fontWeight: 600,
-        lineHeight: 1.5,
-        letterSpacing: '0.08em',
-        textTransform: 'uppercase',
-    },
-    button: {
-        fontSize: '1.125rem',     // 18px — canonical button size per DESIGN.md
-        fontWeight: 600,
+        fontFamily: bodyFontFamily,
+        fontSize: '0.6875rem',    // 11px
+        fontWeight: 700,
         lineHeight: 1.6,
-        textTransform: 'none',    // No all-caps — Calendly uses sentence case
-        letterSpacing: 'normal',
+        letterSpacing: '0.05em',
+        textTransform: 'uppercase',
+        color: '#8C9EC5',
+    },
+
+    button: {
+        fontFamily: bodyFontFamily,
+        fontSize: '0.875rem',     // 14px
+        fontWeight: 600,
+        lineHeight: 1.4,
+        textTransform: 'none',
+        letterSpacing: '0.005em',
     },
 };

@@ -2,57 +2,72 @@ import { createTheme } from '@mui/material/styles';
 import { palette, designTokens } from './palette';
 import { typography } from './typography';
 
-const { shadowSm, shadowMd, shadowBtn, hairline, pebble, inkNavy, signalBlue, cloud, paper } = designTokens;
+const {
+    stoneCanvas,
+    pureWhite,
+    stoneBorder,
+    stoneMuted,
+    ashGray,
+    warmGray,
+    inkBlack,
+    soot,
+    skyWash,
+    cyanSignal,
+    cyanEdge,
+    shadowMd,
+    shadowSm,
+    shadowSubtle,
+    shadowXl,
+} = designTokens;
+
+const interFontFamily =
+    "'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, sans-serif";
 
 /**
- * MUI Theme — Calendly DESIGN.md
- *
- * Rules enforced:
- * - All shadows use blue-tinted rgba(71,103,136,...) base — never rgba(0,0,0,...)
- * - Buttons: 8px border-radius, 18px/600 text, Signal Blue primary fill
- * - Cards: 16px (product) or 24px (feature panels) border-radius
- * - Inputs: 8px border-radius, Pebble (#f0f3f8) fill
- * - Hairline (#d4e0ed) for all borders
- * - No gradients on backgrounds — flat surfaces + shadow elevation only
- * - Ink Navy (#0b3558) for text, never pure #000000
+ * MUI Theme — Minimalist E-Commerce (Blue Accent)
+ * 
+ * Reglas de diseño:
+ * - Redondeo máximo de 10px en toda la interfaz (eliminados los estilos de píldora 9999px).
+ * - Botones y CTAs de compra con radio de 8px a 10px.
+ * - Tarjetas de producto, contenedores e imágenes con bordes limpios (8px - 10px).
+ * - Chips, inputs y badges estilizados para retail moderno (4px - 6px).
  */
 export const theme = createTheme({
     palette,
     typography,
 
-    spacing: 8, // Base unit: 8px
+    spacing: 4,
 
     shape: {
-        borderRadius: 8, // Default — buttons and inputs
+        borderRadius: 8, // Base compacta dentro del límite de 10px
     },
 
-    // MUI shadow scale replaced with blue-tinted system
     shadows: [
         'none',
-        shadowSm,   // elevation 1
-        shadowSm,   // elevation 2
-        shadowSm,   // elevation 3
-        shadowSm,   // elevation 4
-        shadowBtn,  // elevation 5
-        shadowBtn,  // elevation 6
-        shadowBtn,  // elevation 7
-        shadowMd,   // elevation 8
-        shadowMd,   // elevation 9
-        shadowMd,   // elevation 10
-        shadowMd,   // elevation 11
-        shadowMd,   // elevation 12
-        shadowMd,   // elevation 13
-        shadowMd,   // elevation 14
-        shadowMd,   // elevation 15
-        shadowMd,   // elevation 16
-        shadowMd,   // elevation 17
-        shadowMd,   // elevation 18
-        shadowMd,   // elevation 19
-        shadowMd,   // elevation 20
-        shadowMd,   // elevation 21
-        shadowMd,   // elevation 22
-        shadowMd,   // elevation 23
-        shadowMd,   // elevation 24
+        shadowSubtle, // elevation 1 — divisores sutiles, barras fijas
+        shadowSm,     // elevation 2 — tarjetas de producto estándar
+        shadowSm,     // elevation 3
+        shadowSm,     // elevation 4
+        shadowMd,     // elevation 5 — hover en tarjetas de producto
+        shadowMd,     // elevation 6
+        shadowMd,     // elevation 7
+        shadowMd,     // elevation 8
+        shadowMd,     // elevation 9
+        shadowMd,     // elevation 10
+        shadowMd,     // elevation 11
+        shadowMd,     // elevation 12
+        shadowMd,     // elevation 13
+        shadowMd,     // elevation 14
+        shadowMd,     // elevation 15
+        shadowXl,     // elevation 16 — modales de carrito / checkout rápido
+        shadowXl,     // elevation 17
+        shadowXl,     // elevation 18
+        shadowXl,     // elevation 19
+        shadowXl,     // elevation 20
+        shadowXl,     // elevation 21
+        shadowXl,     // elevation 22
+        shadowXl,     // elevation 23
+        shadowXl,     // elevation 24
     ],
 
     components: {
@@ -71,142 +86,194 @@ export const theme = createTheme({
                     scrollBehavior: 'smooth',
                 },
                 body: {
-                    backgroundColor: cloud,
-                    color: inkNavy,
+                    backgroundColor: stoneCanvas,
+                    color: inkBlack,
+                    fontFamily: interFontFamily,
+                    fontSize: '0.875rem',
+                    fontWeight: 400,
+                    lineHeight: 1.6,
                     scrollbarWidth: 'thin',
-                    scrollbarColor: `${hairline} ${cloud}`,
+                    scrollbarColor: `${stoneMuted} ${stoneCanvas}`,
                 },
                 '::-webkit-scrollbar': { width: '6px', height: '6px' },
-                '::-webkit-scrollbar-track': { background: cloud },
-                '::-webkit-scrollbar-thumb': { background: hairline, borderRadius: '3px' },
-                // Import Manrope from Google Fonts
-                '@import': `url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap')`,
+                '::-webkit-scrollbar-track': { background: stoneCanvas },
+                '::-webkit-scrollbar-thumb': { background: stoneMuted, borderRadius: '4px' },
+                '@import': `url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap')`,
             },
         },
 
-        // ── Buttons ──────────────────────────────────────────────────────────
+        // ── Buttons (Máximo 8px-10px de redondeo, estilo e-commerce) ────────
         MuiButton: {
             defaultProps: {
-                disableElevation: true,  // Shadows handled via styleOverrides for consistency
+                disableElevation: true,
             },
             styleOverrides: {
                 root: {
-                    borderRadius: 8,          // Exact spec from DESIGN.md
-                    fontSize: '1.125rem',     // 18px — canonical button size
-                    fontWeight: 600,
-                    lineHeight: 1.6,
-                    textTransform: 'none',
-                    letterSpacing: 'normal',
-                    transition: 'all 0.15s ease',
-                },
-                // Primary — Signal Blue filled
-                contained: {
-                    backgroundColor: signalBlue,
-                    color: paper,
-                    boxShadow: shadowBtn,
-                    padding: '10px 20px',  // Comfortable padding per spec
-                    '&:hover': {
-                        backgroundColor: '#0052cc',
-                        boxShadow: shadowMd,
-                        transform: 'translateY(-1px)',
-                    },
-                    '&:active': {
-                        transform: 'translateY(0)',
-                        boxShadow: shadowSm,
-                    },
-                },
-                // Secondary — Ink Navy dark button (variant="contained" color="secondary")
-                colorSecondary: {
-                    backgroundColor: inkNavy,
-                    color: paper,
-                    '&:hover': {
-                        backgroundColor: '#1a4f7a',
-                    },
-                },
-                // Outlined — Hairline border, Ink Navy text
-                outlined: {
-                    borderColor: hairline,
-                    color: inkNavy,
-                    borderWidth: '1px',
-                    padding: '9px 20px',
-                    '&:hover': {
-                        borderColor: signalBlue,
-                        color: signalBlue,
-                        backgroundColor: '#e6f0ff',
-                        borderWidth: '1px',
-                    },
-                },
-                // Text — Ghost link style
-                text: {
-                    color: inkNavy,
-                    fontWeight: 500,
-                    padding: '4px 8px',
-                    '&:hover': {
-                        backgroundColor: pebble,
-                        color: signalBlue,
-                    },
-                },
-                // Size variants
-                sizeLarge: {
-                    padding: '12px 24px',
-                    fontSize: '1.125rem',
-                },
-                sizeSmall: {
-                    padding: '6px 12px',
+                    borderRadius: 8,
+                    padding: '9px 18px',
                     fontSize: '0.875rem',
                     fontWeight: 600,
+                    lineHeight: 1.4,
+                    textTransform: 'none',
+                    letterSpacing: '0.01em',
+                    transition: 'all 0.15s ease-in-out',
+                },
+                // Primary CTA (Add to cart, Checkout)
+                contained: {
+                    backgroundColor: cyanSignal,
+                    border: `1px solid ${cyanSignal}`,
+                    color: pureWhite,
+                    fontWeight: 600,
+                    boxShadow: shadowSubtle,
+                    '&:hover': {
+                        backgroundColor: cyanEdge,
+                        borderColor: cyanEdge,
+                        boxShadow: shadowSm,
+                    },
+                    '&:active': {
+                        backgroundColor: cyanEdge,
+                        boxShadow: 'none',
+                    },
+                    '&.Mui-disabled': {
+                        backgroundColor: stoneCanvas,
+                        borderColor: stoneBorder,
+                        color: ashGray,
+                    },
+                },
+                // Secondary Button (Dark style checkout / actions)
+                colorSecondary: {
+                    '&.MuiButton-contained': {
+                        backgroundColor: soot,
+                        border: `1px solid ${soot}`,
+                        color: pureWhite,
+                        '&:hover': {
+                            backgroundColor: inkBlack,
+                            borderColor: inkBlack,
+                        },
+                    },
+                },
+                // Outlined Button (Filtros, ver detalles)
+                outlined: {
+                    borderRadius: 8,
+                    backgroundColor: 'transparent',
+                    border: `1px solid ${stoneBorder}`,
+                    color: inkBlack,
+                    fontWeight: 500,
+                    padding: '8px 16px',
+                    '&:hover': {
+                        borderColor: stoneMuted,
+                        backgroundColor: pureWhite,
+                        color: inkBlack,
+                    },
+                    '&.Mui-disabled': {
+                        borderColor: stoneBorder,
+                        color: ashGray,
+                    },
+                },
+                // Navigation / Text Links
+                text: {
                     borderRadius: 6,
+                    color: warmGray,
+                    fontWeight: 500,
+                    padding: '6px 12px',
+                    minHeight: 32,
+                    '&:hover': {
+                        backgroundColor: stoneBorder,
+                        color: inkBlack,
+                    },
+                },
+                sizeLarge: {
+                    borderRadius: 10,
+                    padding: '12px 24px',
+                    fontSize: '0.9375rem',
+                },
+                sizeSmall: {
+                    borderRadius: 6,
+                    padding: '6px 12px',
+                    fontSize: '0.8125rem',
                 },
             },
         },
 
-        // ── Inputs ───────────────────────────────────────────────────────────
+        // ── Inputs (Búsqueda, checkout y formularios: 8px) ──
         MuiTextField: {
             styleOverrides: {
                 root: {
                     '& .MuiOutlinedInput-root': {
-                        borderRadius: 8,                 // inputs: 8px per spec
-                        backgroundColor: pebble,         // Pebble fill (#f0f3f8)
-                        fontSize: '1rem',
+                        borderRadius: 8,
+                        backgroundColor: pureWhite,
+                        fontSize: '0.875rem',
                         fontWeight: 400,
-                        color: inkNavy,
-                        transition: 'all 0.15s ease',
+                        color: inkBlack,
+                        transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                         '& fieldset': {
-                            borderColor: hairline,       // 1px Hairline border
+                            borderColor: stoneBorder,
                             borderWidth: '1px',
                         },
                         '&:hover fieldset': {
-                            borderColor: '#a6bbd1',
-                        },
-                        '&.Mui-focused': {
-                            backgroundColor: paper,      // White on focus
+                            borderColor: stoneMuted,
                         },
                         '&.Mui-focused fieldset': {
-                            borderColor: signalBlue,
+                            borderColor: cyanSignal,
                             borderWidth: '1.5px',
                         },
                         '&.Mui-error fieldset': {
-                            borderColor: '#d93025',
+                            borderColor: '#ef4444',
+                        },
+                    },
+                    '& .MuiInputBase-input': {
+                        padding: '10px 14px',
+                        '&::placeholder': {
+                            color: warmGray,
+                            opacity: 1,
                         },
                     },
                     '& .MuiInputLabel-root': {
-                        color: '#476788',
-                        fontSize: '1rem',
+                        color: warmGray,
+                        fontSize: '0.875rem',
                         '&.Mui-focused': {
-                            color: signalBlue,
+                            color: cyanSignal,
                         },
                         '&.Mui-error': {
-                            color: '#d93025',
+                            color: '#ef4444',
                         },
                     },
                     '& .MuiFormHelperText-root': {
                         fontSize: '0.75rem',
-                        fontWeight: 500,
                         marginTop: '4px',
-                        color: '#476788',
+                        color: ashGray,
                         '&.Mui-error': {
-                            color: '#d93025',
+                            color: '#ef4444',
                         },
+                    },
+                },
+            },
+        },
+
+        MuiOutlinedInput: {
+            styleOverrides: {
+                root: {
+                    borderRadius: 8,
+                    backgroundColor: pureWhite,
+                    color: inkBlack,
+                    fontSize: '0.875rem',
+                    '& .MuiOutlinedInput-notchedOutline': {
+                        borderColor: stoneBorder,
+                        borderWidth: '1px',
+                    },
+                    '&:hover .MuiOutlinedInput-notchedOutline': {
+                        borderColor: stoneMuted,
+                    },
+                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                        borderColor: cyanSignal,
+                        borderWidth: '1.5px',
+                    },
+                },
+                input: {
+                    padding: '10px 14px',
+                    '&::placeholder': {
+                        color: warmGray,
+                        opacity: 1,
                     },
                 },
             },
@@ -215,23 +282,25 @@ export const theme = createTheme({
         MuiInputBase: {
             styleOverrides: {
                 root: {
-                    fontFamily: '"Manrope", "Segoe UI", ui-sans-serif, system-ui, sans-serif',
+                    fontFamily: interFontFamily,
                 },
             },
         },
 
-        // ── Cards ────────────────────────────────────────────────────────────
+        // ── Tarjetas de Producto (Ecom Card: 1px solid #D5DFE4, hover #425A8B) ──
         MuiCard: {
             styleOverrides: {
                 root: {
-                    backgroundColor: paper,
-                    borderRadius: 16,              // Product cards: 16px per spec
-                    border: `1px solid ${hairline}`,
-                    boxShadow: shadowSm,
+                    backgroundColor: pureWhite,
+                    borderRadius: 8,
+                    border: `1px solid ${stoneBorder}`,
+                    boxShadow: 'none',
                     backgroundImage: 'none',
-                    transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+                    overflow: 'hidden',
+                    transition: 'border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease',
                     '&:hover': {
-                        boxShadow: shadowMd,
+                        borderColor: '#425A8B',
+                        boxShadow: '0 10px 25px rgba(66, 90, 139, 0.08)',
                     },
                 },
             },
@@ -240,9 +309,9 @@ export const theme = createTheme({
         MuiCardContent: {
             styleOverrides: {
                 root: {
-                    padding: '24px',               // Card padding: 24px per spec
+                    padding: '16px',
                     '&:last-child': {
-                        paddingBottom: '24px',
+                        paddingBottom: '16px',
                     },
                 },
             },
@@ -252,28 +321,30 @@ export const theme = createTheme({
         MuiPaper: {
             styleOverrides: {
                 root: {
-                    backgroundColor: paper,
+                    backgroundColor: pureWhite,
                     backgroundImage: 'none',
-                    border: `1px solid ${hairline}`,
+                    borderRadius: 10,
+                    border: `1px solid ${stoneBorder}`,
                 },
-                elevation1: { boxShadow: shadowSm },
+                elevation0: { boxShadow: 'none', border: 'none' },
+                elevation1: { boxShadow: shadowSubtle },
                 elevation2: { boxShadow: shadowSm },
-                elevation3: { boxShadow: shadowBtn },
-                elevation4: { boxShadow: shadowMd },
+                elevation3: { boxShadow: shadowMd },
+                elevation4: { boxShadow: shadowXl },
             },
         },
 
-        // ── AppBar / Navbar ──────────────────────────────────────────────────
+        // ── Header / Navbar ──────────────────────────────────────────────────
         MuiAppBar: {
             styleOverrides: {
                 root: {
-                    backgroundColor: 'rgba(248, 249, 251, 0.92)', // Cloud with transparency
-                    backdropFilter: 'blur(12px)',
+                    backgroundColor: pureWhite,
                     boxShadow: 'none',
-                    borderBottom: `1px solid ${hairline}`,
-                    color: inkNavy,
+                    border: 'none',
+                    borderBottom: `1px solid ${stoneBorder}`,
+                    color: inkBlack,
                     backgroundImage: 'none',
-                    minHeight: 64,                 // 64px sticky nav per DESIGN.md Layout
+                    minHeight: 64,
                 },
             },
         },
@@ -288,13 +359,15 @@ export const theme = createTheme({
             },
         },
 
-        // ── Drawer / Sidebar ─────────────────────────────────────────────────
+        // ── Drawer (Cart Drawer / Filtros Móviles) ───────────────────────────
         MuiDrawer: {
             styleOverrides: {
                 paper: {
-                    backgroundColor: paper,
-                    borderRight: `1px solid ${hairline}`,
-                    boxShadow: 'none',
+                    backgroundColor: pureWhite,
+                    border: 'none',
+                    borderLeft: `1px solid ${stoneBorder}`,
+                    boxShadow: shadowXl,
+                    borderRadius: 0,
                 },
             },
         },
@@ -303,25 +376,25 @@ export const theme = createTheme({
         MuiListItemButton: {
             styleOverrides: {
                 root: {
-                    borderRadius: 8,
+                    borderRadius: 6,
                     margin: '2px 8px',
-                    color: '#476788',
-                    fontSize: '0.9375rem',
-                    fontWeight: 500,
+                    color: warmGray,
+                    fontSize: '0.875rem',
+                    fontWeight: 400,
                     transition: 'all 0.15s ease',
                     '&:hover': {
-                        backgroundColor: pebble,
-                        color: inkNavy,
+                        backgroundColor: stoneCanvas,
+                        color: inkBlack,
                     },
                     '&.Mui-selected': {
-                        backgroundColor: '#e6f0ff',  // Pebble-tinted selected
-                        color: signalBlue,
+                        backgroundColor: skyWash,
+                        color: inkBlack,
                         fontWeight: 600,
                         '& .MuiListItemIcon-root': {
-                            color: signalBlue,
+                            color: cyanSignal,
                         },
                         '&:hover': {
-                            backgroundColor: '#d4e8ff',
+                            backgroundColor: skyWash,
                         },
                     },
                 },
@@ -331,8 +404,8 @@ export const theme = createTheme({
         MuiListItemIcon: {
             styleOverrides: {
                 root: {
-                    color: '#a6bbd1',   // Mist Gray for inactive icons
-                    minWidth: 38,
+                    color: ashGray,
+                    minWidth: 36,
                     transition: 'color 0.15s ease',
                 },
             },
@@ -341,24 +414,33 @@ export const theme = createTheme({
         MuiListItemText: {
             styleOverrides: {
                 primary: {
-                    fontSize: '0.9375rem',
+                    fontSize: '0.875rem',
                     fontWeight: 500,
                 },
             },
         },
 
-        // ── Chip / Badge ──────────────────────────────────────────────────────
+        // ── Chips / Tags de Producto (Descuentos, Stock, Tallas: 6px) ────────
         MuiChip: {
             styleOverrides: {
                 root: {
-                    borderRadius: 50,              // badges: 9999px — pill shape
-                    fontFamily: '"Manrope", sans-serif',
+                    borderRadius: 6,
+                    fontFamily: interFontFamily,
                     fontSize: '0.75rem',
-                    fontWeight: 500,
+                    fontWeight: 600,
                     height: 24,
+                    border: `1px solid ${stoneBorder}`,
+                    backgroundColor: pureWhite,
+                    color: inkBlack,
                     '&.MuiChip-colorPrimary': {
-                        backgroundColor: '#e6f0ff',
-                        color: '#004eba',           // Deep Cobalt for badge text
+                        backgroundColor: skyWash,
+                        borderColor: skyWash,
+                        color: cyanEdge,
+                    },
+                    '&.MuiChip-colorSecondary': {
+                        backgroundColor: soot,
+                        borderColor: soot,
+                        color: pureWhite,
                     },
                 },
                 label: {
@@ -367,23 +449,24 @@ export const theme = createTheme({
             },
         },
 
-        // ── Alerts ───────────────────────────────────────────────────────────
+        // ── Alerts (Notificaciones de compra / Stock) ────────────────────────
         MuiAlert: {
             styleOverrides: {
                 root: {
                     borderRadius: 8,
-                    fontSize: '0.9375rem',
-                    fontWeight: 500,
+                    fontSize: '0.875rem',
+                    fontWeight: 400,
+                    border: `1px solid ${stoneBorder}`,
                 },
             },
         },
 
-        // ── Menu ─────────────────────────────────────────────────────────────
+        // ── Menu (Dropdowns de Categorías / Carrito flotante) ────────────────
         MuiMenu: {
             styleOverrides: {
                 paper: {
-                    borderRadius: 12,
-                    border: `1px solid ${hairline}`,
+                    borderRadius: 10,
+                    border: `1px solid ${stoneBorder}`,
                     boxShadow: shadowMd,
                     backgroundImage: 'none',
                 },
@@ -393,18 +476,21 @@ export const theme = createTheme({
         MuiMenuItem: {
             styleOverrides: {
                 root: {
-                    fontSize: '0.9375rem',
-                    fontWeight: 500,
-                    color: inkNavy,
+                    fontSize: '0.875rem',
+                    fontWeight: 400,
+                    color: inkBlack,
                     padding: '8px 16px',
+                    borderRadius: 6,
+                    margin: '2px 4px',
                     '&:hover': {
-                        backgroundColor: pebble,
+                        backgroundColor: stoneCanvas,
                     },
                     '&.Mui-selected': {
-                        backgroundColor: '#e6f0ff',
-                        color: signalBlue,
+                        backgroundColor: skyWash,
+                        color: inkBlack,
+                        fontWeight: 600,
                         '&:hover': {
-                            backgroundColor: '#d4e8ff',
+                            backgroundColor: skyWash,
                         },
                     },
                 },
@@ -415,7 +501,7 @@ export const theme = createTheme({
         MuiDivider: {
             styleOverrides: {
                 root: {
-                    borderColor: hairline,
+                    borderColor: stoneBorder,
                 },
             },
         },
@@ -424,9 +510,11 @@ export const theme = createTheme({
         MuiAvatar: {
             styleOverrides: {
                 root: {
-                    backgroundColor: signalBlue,
-                    color: paper,
-                    fontFamily: '"Manrope", sans-serif',
+                    backgroundColor: skyWash,
+                    color: cyanEdge,
+                    borderRadius: 8,
+                    border: `1px solid ${stoneBorder}`,
+                    fontFamily: interFontFamily,
                     fontWeight: 600,
                 },
             },
@@ -436,15 +524,15 @@ export const theme = createTheme({
         MuiTooltip: {
             styleOverrides: {
                 tooltip: {
-                    backgroundColor: inkNavy,
-                    color: paper,
+                    backgroundColor: soot,
+                    color: pureWhite,
                     fontSize: '0.75rem',
                     fontWeight: 500,
                     borderRadius: 6,
                     padding: '6px 10px',
                 },
                 arrow: {
-                    color: inkNavy,
+                    color: soot,
                 },
             },
         },
@@ -453,24 +541,22 @@ export const theme = createTheme({
         MuiTypography: {
             styleOverrides: {
                 root: {
-                    // Enforce Ink Navy — never inherit #000000
                     color: 'inherit',
                 },
             },
         },
 
-        // ── Table ────────────────────────────────────────────────────────────
+        // ── Table (Historial de órdenes, carrito en tabla) ────────────────────
         MuiTableHead: {
             styleOverrides: {
                 root: {
                     '& .MuiTableCell-root': {
-                        backgroundColor: pebble,
-                        color: '#476788',
+                        backgroundColor: stoneCanvas,
+                        color: warmGray,
                         fontSize: '0.75rem',
                         fontWeight: 600,
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.06em',
-                        borderBottom: `1px solid ${hairline}`,
+                        letterSpacing: '0.025em',
+                        borderBottom: `1px solid ${stoneBorder}`,
                     },
                 },
             },
@@ -481,14 +567,14 @@ export const theme = createTheme({
                 root: {
                     '& .MuiTableRow-root': {
                         '&:hover': {
-                            backgroundColor: '#fafbfc',
+                            backgroundColor: stoneCanvas,
                         },
                     },
                     '& .MuiTableCell-root': {
-                        color: inkNavy,
-                        fontSize: '0.9375rem',
+                        color: inkBlack,
+                        fontSize: '0.875rem',
                         fontWeight: 400,
-                        borderBottom: `1px solid ${hairline}`,
+                        borderBottom: `1px solid ${stoneBorder}`,
                     },
                 },
             },
@@ -497,8 +583,8 @@ export const theme = createTheme({
         MuiTableCell: {
             styleOverrides: {
                 root: {
-                    padding: '12px 16px',
-                    fontFamily: '"Manrope", sans-serif',
+                    padding: '14px 16px',
+                    fontFamily: interFontFamily,
                 },
             },
         },
@@ -507,7 +593,7 @@ export const theme = createTheme({
         MuiContainer: {
             styleOverrides: {
                 maxWidthLg: {
-                    maxWidth: '1200px !important',   // Page max-width: 1200px per spec
+                    maxWidth: '1280px !important',
                 },
             },
         },
@@ -523,12 +609,12 @@ export const theme = createTheme({
         MuiLink: {
             styleOverrides: {
                 root: {
-                    color: signalBlue,
+                    color: cyanSignal,
                     fontWeight: 500,
                     textDecoration: 'none',
                     '&:hover': {
                         textDecoration: 'underline',
-                        color: '#0052cc',
+                        color: cyanEdge,
                     },
                 },
             },
@@ -538,19 +624,21 @@ export const theme = createTheme({
         MuiBreadcrumbs: {
             styleOverrides: {
                 root: {
-                    fontSize: '0.875rem',
-                    color: '#476788',
+                    fontSize: '0.8125rem',
+                    color: warmGray,
                 },
             },
         },
 
-        // ── Badge ─────────────────────────────────────────────────────────────
+        // ── Badge (Contador de carrito) ──────────────────────────────────────
         MuiBadge: {
             styleOverrides: {
                 badge: {
-                    fontFamily: '"Manrope", sans-serif',
+                    fontFamily: interFontFamily,
                     fontWeight: 600,
-                    fontSize: '0.625rem',
+                    fontSize: '0.6875rem',
+                    backgroundColor: cyanSignal,
+                    color: pureWhite,
                 },
             },
         },
@@ -559,32 +647,11 @@ export const theme = createTheme({
         MuiSelect: {
             styleOverrides: {
                 select: {
-                    backgroundColor: pebble,
-                    color: inkNavy,
+                    backgroundColor: pureWhite,
+                    color: inkBlack,
                     fontWeight: 400,
-                    fontSize: '1rem',
-                },
-            },
-        },
-
-        MuiOutlinedInput: {
-            styleOverrides: {
-                root: {
+                    fontSize: '0.875rem',
                     borderRadius: 8,
-                    backgroundColor: pebble,
-                    '& .MuiOutlinedInput-notchedOutline': {
-                        borderColor: hairline,
-                    },
-                    '&:hover .MuiOutlinedInput-notchedOutline': {
-                        borderColor: '#a6bbd1',
-                    },
-                    '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                        borderColor: signalBlue,
-                        borderWidth: '1.5px',
-                    },
-                    '&.Mui-focused': {
-                        backgroundColor: paper,
-                    },
                 },
             },
         },
@@ -594,23 +661,56 @@ export const theme = createTheme({
             styleOverrides: {
                 switchBase: {
                     '&.Mui-checked': {
-                        color: signalBlue,
+                        color: cyanSignal,
                         '+ .MuiSwitch-track': {
-                            backgroundColor: signalBlue,
+                            backgroundColor: cyanSignal,
                         },
                     },
                 },
             },
         },
 
-        // ── Checkbox ──────────────────────────────────────────────────────────
+        // ── Checkbox (Filtros de catálogo — Ecom Orange #FD9636) ─────────────
         MuiCheckbox: {
             styleOverrides: {
                 root: {
-                    color: hairline,
+                    color: '#D5DFE4',
+                    borderRadius: 4,
                     '&.Mui-checked': {
-                        color: signalBlue,
+                        color: '#FD9636',
                     },
+                },
+            },
+        },
+
+        // ── Slider (Filtro de precio — Ecom Orange #FD9636) ──────────────────
+        MuiSlider: {
+            styleOverrides: {
+                root: {
+                    color: '#FD9636',
+                    height: 6,
+                },
+                thumb: {
+                    height: 18,
+                    width: 18,
+                    backgroundColor: '#FD9636',
+                    border: '2px solid #FFFFFF',
+                    boxShadow: '0 2px 6px rgba(253, 150, 54, 0.35)',
+                    '&:hover, &.Mui-focusVisible': {
+                        boxShadow: '0 0 0 6px rgba(253, 150, 54, 0.16)',
+                    },
+                },
+                track: {
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: '#FD9636',
+                    border: 'none',
+                },
+                rail: {
+                    height: 6,
+                    borderRadius: 3,
+                    backgroundColor: '#D5DFE4',
+                    opacity: 1,
                 },
             },
         },
@@ -619,23 +719,24 @@ export const theme = createTheme({
         MuiRadio: {
             styleOverrides: {
                 root: {
-                    color: hairline,
+                    color: stoneMuted,
                     '&.Mui-checked': {
-                        color: signalBlue,
+                        color: cyanSignal,
                     },
                 },
             },
         },
 
-        // ── Tabs ──────────────────────────────────────────────────────────────
+        // ── Tabs (Categorías de catálogo / Fichas de producto) ───────────────
         MuiTabs: {
             styleOverrides: {
                 root: {
-                    borderBottom: `1px solid ${hairline}`,
+                    borderBottom: `1px solid ${stoneBorder}`,
                 },
                 indicator: {
-                    backgroundColor: signalBlue,
+                    backgroundColor: cyanSignal,
                     height: 2,
+                    borderRadius: '2px 2px 0 0',
                 },
             },
         },
@@ -643,48 +744,60 @@ export const theme = createTheme({
         MuiTab: {
             styleOverrides: {
                 root: {
-                    fontFamily: '"Manrope", sans-serif',
-                    fontSize: '0.9375rem',
+                    fontFamily: interFontFamily,
+                    fontSize: '0.875rem',
                     fontWeight: 500,
                     textTransform: 'none',
-                    color: '#476788',
-                    letterSpacing: 'normal',
-                    padding: '12px 16px',
+                    color: warmGray,
+                    letterSpacing: '0.01em',
+                    padding: '8px 16px',
+                    borderRadius: 8,
                     '&.Mui-selected': {
-                        color: signalBlue,
+                        color: cyanSignal,
                         fontWeight: 600,
                     },
                 },
             },
         },
 
-        // ── Pagination ────────────────────────────────────────────────────────
+        // ── Pagination (Catálogo de productos: 8px) ──────────────────────────
         MuiPaginationItem: {
             styleOverrides: {
                 root: {
-                    fontFamily: '"Manrope", sans-serif',
+                    fontFamily: interFontFamily,
                     fontWeight: 500,
-                    color: inkNavy,
+                    color: inkBlack,
                     borderRadius: 8,
+                    border: `1px solid ${stoneBorder}`,
                     '&.Mui-selected': {
-                        backgroundColor: signalBlue,
-                        color: paper,
+                        backgroundColor: cyanSignal,
+                        borderColor: cyanSignal,
+                        color: pureWhite,
                         '&:hover': {
-                            backgroundColor: '#0052cc',
+                            backgroundColor: cyanEdge,
                         },
                     },
                 },
             },
         },
 
-        // ── Skeleton ──────────────────────────────────────────────────────────
+        // ── Skeleton (Cards cargando) ────────────────────────────────────────
         MuiSkeleton: {
             styleOverrides: {
                 root: {
-                    backgroundColor: pebble,
-                    '&::after': {
-                        background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)`,
-                    },
+                    backgroundColor: stoneBorder,
+                    borderRadius: 8,
+                },
+            },
+        },
+
+        // ── Dialog / Quick View Modal ────────────────────────────────────────
+        MuiDialog: {
+            styleOverrides: {
+                paper: {
+                    borderRadius: 10,
+                    boxShadow: shadowXl,
+                    border: `1px solid ${stoneBorder}`,
                 },
             },
         },

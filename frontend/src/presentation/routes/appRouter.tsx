@@ -1,23 +1,22 @@
-import { Suspense, lazy } from 'react';
+import { Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { authRoutes } from '../../modules/auth/presentation/auth.routes';
-import { websitesRoutes } from '../../modules/websites/presentation/websites.routes';
-import { contactsRoutes } from '../../modules/contacts/presentation/contacts.routes';
 import { usersRoutes } from '../../modules/users/presentation/users.routes';
 import { profileRoutes } from '../../modules/profile/presentation/profile.routes';
-import { auditRoutes } from '../../modules/audit/presentation/audit.routes';
-import { rolesRoutes } from '../../modules/roles/presentation/roles.routes';
+import { shopRoutes } from '../../modules/shop/presentation/shop.routes';
+import { productsRoutes } from '../../modules/products/presentation/products.routes';
+import { ShopCatalogPage } from '../../modules/shop/presentation/shop.lazy';
+import { CartPage } from '../../modules/cart/presentation/cart.lazy';
 import ProtectedRoute from './ProtectedRoute';
 
 import { FullPageLoader } from '../../shared/components/loaders';
 import { AccessDeniedPage } from '../../shared/pages';
-import DashboardPage from '../../shared/pages/Dashboard.page';
 
-const BlankLayout = lazy(() => import('../layouts/blankLayout'));
-const FullLayout = lazy(() => import('../layouts/fullLayout'));
+import BlankLayout from '../layouts/blankLayout';
+import FullLayout from '../layouts/fullLayout';
 
 export const appRouter = createBrowserRouter([
-    // ── Public routes (unauthenticated) ──────────────────────────────────────
+    // ── Auth routes (BlankLayout) ────────────────────────────────────────────
     {
         path: '/auth',
         element: (
@@ -28,54 +27,46 @@ export const appRouter = createBrowserRouter([
         children: [...authRoutes],
     },
 
-    // ── Protected routes (authenticated) ─────────────────────────────────────
+    // ── Main Storefront & Application Shell (FullLayout) ─────────────────────
     {
         path: '/',
         element: (
             <Suspense fallback={<FullPageLoader />}>
-                <ProtectedRoute />
+                <FullLayout />
             </Suspense>
         ),
         children: [
+            // Public Storefront / Catalog — freely accessible to Guest (invitado) and Cliente/Operador/Administrador
             {
-                element: (
-                    <Suspense fallback={<FullPageLoader />}>
-                        <FullLayout />
-                    </Suspense>
-                ),
+                index: true,
+                element: <ShopCatalogPage />,
+            },
+            {
+                path: 'shop',
+                children: [...shopRoutes],
+            },
+            {
+                path: 'cart',
+                element: <CartPage />,
+            },
+
+            // Access Denied — reached when RouteProtector denies role access
+            {
+                path: 'access-denied',
+                element: <AccessDeniedPage />,
+            },
+
+            // ── Authenticated routes ─────────────────────────────────────────
+            {
+                element: <ProtectedRoute />,
                 children: [
-                    // Dashboard — default route
                     {
-                        index: true,
-                        element: <DashboardPage />,
-                    },
-
-                    // Access Denied — reached when RouteProtector denies access
-                    {
-                        path: 'access-denied',
-                        element: <AccessDeniedPage />,
-                    },
-
-                    // ── Module routes ──
-                    {
-                        path: 'websites',
-                        children: [...websitesRoutes],
-                    },
-                    {
-                        path: 'contacts',
-                        children: [...contactsRoutes],
+                        path: 'products',
+                        children: [...productsRoutes],
                     },
                     {
                         path: 'users',
                         children: [...usersRoutes],
-                    },
-                    {
-                        path: 'audit-logs',
-                        children: [...auditRoutes],
-                    },
-                    {
-                        path: 'roles',
-                        children: [...rolesRoutes],
                     },
                     {
                         path: 'profile',
@@ -86,7 +77,7 @@ export const appRouter = createBrowserRouter([
         ],
     },
 
-    // ── Catch-all — redirect unknown paths to home ────────────────────────────
+    // ── Catch-all — redirect unknown paths to home ───────────────────────────
     {
         path: '*',
         element: <Navigate to="/" replace />,
