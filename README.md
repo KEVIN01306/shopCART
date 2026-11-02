@@ -74,6 +74,14 @@ VITE_API_URL=http://localhost:4000/api
 
 ## 2. Base de Datos Microsoft SQL Server
 
+> [!IMPORTANT]
+> **REQUISITO PREVIO INDISPENSABLE**:
+> Antes de ejecutar `npm run db:init`, `npm run db:sp` o cualquier script de seed en el backend, la base de datos `shop_cart_db` **DEBE estar previamente creada** en tu instancia de Microsoft SQL Server (vía DBeaver, Azure Data Studio, SSMS o terminal):
+> ```sql
+> CREATE DATABASE shop_cart_db;
+> ```
+> Si la base de datos no existe físicamente en SQL Server, el driver rechazará la autenticación con el error `Login failed for user 'sa' (Reason: Failed to open the explicitly specified database 'shop_cart_db')`.
+
 ### Ubicación de Scripts SQL
 Todos los scripts de base de datos se encuentran versionados en `backend/src/shared/db/scripts/`:
 - **Esquema de Tablas y Restricciones**: `backend/src/shared/db/scripts/db.sql`
@@ -278,6 +286,9 @@ npm install
 
 # Configurar variables de entorno
 cp .env.example .env
+
+# [IMPORTANTE] Asegúrate de que la base de datos exista en tu SQL Server:
+# CREATE DATABASE shop_cart_db;
 
 # Crear tablas y desplegar Stored Procedures en SQL Server
 npm run db:init
