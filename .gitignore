@@ -1,0 +1,13 @@
+node_modules
+dist
+.env
+/backend/package-lock.json
+/frontend/package-lock.json
+/backend/node_modules
+/frontend/node_modules
+/frontend/dist
+/backend/dist
+AGENTS.md
+CLAUDE.md
+.agents/
+CONTEXT.md
