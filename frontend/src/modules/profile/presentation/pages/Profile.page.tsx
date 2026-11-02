@@ -16,7 +16,7 @@ import {
 import {
     PersonOutlineOutlined,
     EmailOutlined,
-    BusinessOutlined,
+    StorefrontOutlined,
     BadgeOutlined,
     SecurityOutlined,
     CheckCircle,
@@ -47,25 +47,24 @@ const ProfileRow: React.FC<ProfileRowProps> = ({ icon, label, value, isLast = fa
             alignItems: { xs: 'flex-start', sm: 'center' },
             py: 1.75,
             px: { xs: 2.5, sm: 3 },
-            borderBottom: isLast ? 'none' : '0.5px solid',
-            borderColor: 'divider',
+            borderBottom: isLast ? 'none' : '1px solid #e8e6e5',
             transition: 'background-color 0.15s ease',
             '&:hover': {
-                bgcolor: 'action.hover',
+                bgcolor: '#fafaf9',
             },
             gap: 1,
         }}
     >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 240 }}>
             {icon && (
-                <Box sx={{ color: 'text.secondary', display: 'flex', alignItems: 'center', fontSize: '18px' }}>
+                <Box sx={{ color: '#78716c', display: 'flex', alignItems: 'center', fontSize: '18px' }}>
                     {icon}
                 </Box>
             )}
             <Typography
                 variant="body2"
                 sx={{
-                    color: 'text.secondary',
+                    color: '#78716c',
                     fontWeight: 500,
                     textTransform: 'uppercase',
                     letterSpacing: '0.04rem',
@@ -78,7 +77,7 @@ const ProfileRow: React.FC<ProfileRowProps> = ({ icon, label, value, isLast = fa
 
         <Box
             sx={{
-                color: 'text.primary',
+                color: '#0c0a09',
                 fontWeight: 450,
                 fontSize: '13px',
                 textAlign: { xs: 'left', sm: 'right' },
@@ -90,7 +89,7 @@ const ProfileRow: React.FC<ProfileRowProps> = ({ icon, label, value, isLast = fa
     </Box>
 );
 
-const GoogleCard: React.FC<{
+const SelineProfileCard: React.FC<{
     title: string;
     subtitle?: string;
     icon?: React.ReactNode;
@@ -99,31 +98,35 @@ const GoogleCard: React.FC<{
     <Paper
         elevation={0}
         sx={{
-            border: '0.5px solid',
-            borderColor: 'divider',
-            borderRadius: '12px',
+            border: '1px solid #e8e6e5',
+            borderRadius: '10px',
             overflow: 'hidden',
             mb: 3,
-            bgcolor: 'background.paper',
-            boxShadow: (theme) =>
-                theme.palette.mode === 'dark'
-                    ? '0 20px 44px rgba(0,0,0,0.14)'
-                    : '0 4px 20px rgba(0,0,0,0.04)',
+            bgcolor: '#ffffff',
+            boxShadow: 'rgba(0, 0, 0, 0.05) 0px 4px 16px 0px',
         }}
     >
-        <Box sx={{ p: { xs: 2.5, sm: 3 }, pb: 2, borderBottom: '0.5px solid', borderColor: 'divider' }}>
+        <Box sx={{ p: { xs: 2.5, sm: 3 }, pb: 2, borderBottom: '1px solid #e8e6e5' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
                 {icon && (
-                    <Box sx={{ color: 'primary.main', display: 'flex', alignItems: 'center', fontSize: 18 }}>
+                    <Box sx={{ color: '#3ba6f1', display: 'flex', alignItems: 'center', fontSize: 18 }}>
                         {icon}
                     </Box>
                 )}
-                <Typography variant="h6" sx={{ fontWeight: 500, fontSize: '16px', letterSpacing: '-0.32px', color: 'text.primary' }}>
+                <Typography
+                    sx={{
+                        fontFamily: 'var(--font-roobert), Inter, sans-serif',
+                        fontWeight: 400,
+                        fontSize: '18px',
+                        letterSpacing: '-0.25px',
+                        color: '#0c0a09',
+                    }}
+                >
                     {title}
                 </Typography>
             </Box>
             {subtitle && (
-                <Typography variant="body2" sx={{ color: 'text.secondary', fontSize: '13px' }}>
+                <Typography variant="body2" sx={{ color: '#78716c', fontSize: '13px' }}>
                     {subtitle}
                 </Typography>
             )}
@@ -139,7 +142,11 @@ export const ProfilePage: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
-    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'info' | 'error' }>({
+    const [snackbar, setSnackbar] = useState<{
+        open: boolean;
+        message: string;
+        severity: 'success' | 'info' | 'error';
+    }>({
         open: false,
         message: '',
         severity: 'info',
@@ -180,7 +187,7 @@ export const ProfilePage: React.FC = () => {
     if (loading && !displayUser) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-                <CircularProgress sx={{ color: '#3b82f6' }} />
+                <CircularProgress sx={{ color: '#3ba6f1' }} />
             </Box>
         );
     }
@@ -199,12 +206,15 @@ export const ProfilePage: React.FC = () => {
 
     const firstName = displayUser.firstName || displayUser.name?.split(' ')[0] || '';
     const lastName = displayUser.lastName || displayUser.name?.split(' ').slice(1).join(' ') || '';
-    const rolesList = displayUser.roles && displayUser.roles.length > 0
-        ? displayUser.roles
-        : (displayUser.role ? [displayUser.role] : ['Usuario']);
+    const rolesList =
+        displayUser.roles && displayUser.roles.length > 0
+            ? displayUser.roles
+            : displayUser.role
+            ? [displayUser.role]
+            : ['Cliente'];
 
     const formattedDate = displayUser.createdAt
-        ? new Date(displayUser.createdAt).toLocaleDateString('es-ES', {
+        ? new Date(displayUser.createdAt).toLocaleDateString('es-GT', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -227,31 +237,44 @@ export const ProfilePage: React.FC = () => {
                     alignItems: 'center',
                     textAlign: 'center',
                     py: 4,
-                    mb: 2,
+                    px: 3,
+                    mb: 3,
+                    bgcolor: '#ffffff',
+                    border: '1px solid #e8e6e5',
+                    borderRadius: '10px',
+                    boxShadow: 'rgba(0, 0, 0, 0.05) 0px 4px 16px 0px',
                 }}
             >
                 <Avatar
                     sx={{
-                        width: 88,
-                        height: 88,
-                        bgcolor: (theme) => (theme.palette.mode === 'dark' ? '#1f1f21' : '#f1f5f9'),
-                        color: 'primary.main',
-                        fontSize: '2rem',
-                        fontWeight: 600,
+                        width: 80,
+                        height: 80,
+                        bgcolor: '#1c1917',
+                        color: '#ffffff',
+                        fontSize: '1.75rem',
+                        fontWeight: 500,
                         mb: 2,
-                        border: '0.5px solid',
-                        borderColor: 'divider',
-                        boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.25)',
+                        border: '1px solid #e8e6e5',
                     }}
                 >
                     {initials}
                 </Avatar>
 
-                <Typography variant="h4" sx={{ fontWeight: 500, fontSize: '24px', letterSpacing: '-0.64px', mb: 0.5, color: 'text.primary' }}>
+                <Typography
+                    component="h1"
+                    sx={{
+                        fontFamily: 'var(--font-roobert), Inter, sans-serif',
+                        fontWeight: 400,
+                        fontSize: '28px',
+                        letterSpacing: '-0.64px',
+                        mb: 0.5,
+                        color: '#0c0a09',
+                    }}
+                >
                     {displayUser.name}
                 </Typography>
 
-                <Typography variant="body1" sx={{ color: 'text.secondary', fontSize: '13px', mb: 2 }}>
+                <Typography variant="body1" sx={{ color: '#78716c', fontSize: '14px', mb: 2 }}>
                     {displayUser.email}
                 </Typography>
 
@@ -259,57 +282,56 @@ export const ProfilePage: React.FC = () => {
                     {rolesList.map((role) => (
                         <Chip
                             key={role}
-                            icon={<SecurityOutlined sx={{ fontSize: 16 }} />}
+                            icon={<SecurityOutlined sx={{ fontSize: 15, color: '#3398e1 !important' }} />}
                             label={role}
                             size="small"
-                            variant="outlined"
                             sx={{
                                 fontWeight: 500,
                                 fontSize: '11px',
-                                borderRadius: '6px',
-                                borderColor: 'rgba(59, 130, 246, 0.3)',
-                                color: '#60a5fa',
-                                bgcolor: 'rgba(59, 130, 246, 0.08)',
+                                borderRadius: '9999px',
+                                bgcolor: '#c1e1f7',
+                                color: '#3398e1',
+                                border: '1px solid rgba(51, 152, 225, 0.25)',
                             }}
                         />
                     ))}
 
                     <Chip
-                        icon={<CheckCircle sx={{ fontSize: 16, color: 'success.main !important' }} />}
+                        icon={<CheckCircle sx={{ fontSize: 15, color: '#0c0a09 !important' }} />}
                         label={displayUser.isActive !== false ? 'Cuenta Activa' : 'Cuenta Inactiva'}
                         size="small"
                         variant="outlined"
                         sx={{
                             fontWeight: 500,
                             fontSize: '11px',
-                            borderRadius: '6px',
-                            borderColor: 'rgba(34, 197, 94, 0.3)',
-                            color: '#4ade80',
-                            bgcolor: 'rgba(34, 197, 94, 0.08)',
+                            borderRadius: '9999px',
+                            borderColor: '#e8e6e5',
+                            color: '#0c0a09',
+                            bgcolor: '#fafaf9',
                         }}
                     />
 
                     <Chip
-                        icon={<BusinessOutlined sx={{ fontSize: 16 }} />}
-                        label="Sistema de Archivo e Imágenes"
+                        icon={<StorefrontOutlined sx={{ fontSize: 15, color: '#78716c !important' }} />}
+                        label="ShopCart E-Commerce"
                         variant="outlined"
                         size="small"
                         sx={{
-                            fontWeight: 450,
+                            fontWeight: 400,
                             fontSize: '11px',
-                            borderRadius: '6px',
-                            borderColor: 'divider',
-                            color: 'text.secondary',
-                            bgcolor: 'action.hover',
+                            borderRadius: '9999px',
+                            borderColor: '#e8e6e5',
+                            color: '#78716c',
+                            bgcolor: '#fafaf9',
                         }}
                     />
                 </Box>
             </Box>
 
             {/* Card 1: Información Personal Básica */}
-            <GoogleCard
+            <SelineProfileCard
                 title="Información personal"
-                subtitle="Información básica de tu identidad en el sistema"
+                subtitle="Información básica de tu identidad en ShopCart"
                 icon={<PersonOutlineOutlined />}
             >
                 <ProfileRow
@@ -338,55 +360,66 @@ export const ProfilePage: React.FC = () => {
                 />
                 <ProfileRow
                     icon={<BadgeOutlined />}
-                    label="Roles de Usuario"
+                    label="Rol en el Sistema"
                     isLast
                     value={
-                        <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', justifyContent: { xs: 'flex-start', sm: 'flex-end' } }}>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                gap: 0.75,
+                                flexWrap: 'wrap',
+                                justifyContent: { xs: 'flex-start', sm: 'flex-end' },
+                            }}
+                        >
                             {rolesList.map((role) => (
                                 <Chip
                                     key={role}
                                     label={role}
                                     size="small"
-                                    variant="outlined"
-                                    color="primary"
-                                    sx={{ fontWeight: 600, fontSize: '0.75rem', borderRadius: '6px' }}
+                                    sx={{
+                                        fontWeight: 500,
+                                        fontSize: '11px',
+                                        borderRadius: '9999px',
+                                        bgcolor: '#c1e1f7',
+                                        color: '#3398e1',
+                                    }}
                                 />
                             ))}
                         </Box>
                     }
                 />
-            </GoogleCard>
+            </SelineProfileCard>
 
             {/* Card 2: Entorno y Plataforma */}
-            <GoogleCard
-                title="Entorno y Asignación Institucional"
-                subtitle="Detalles de la plataforma y ámbito asignado al usuario"
-                icon={<BusinessOutlined />}
+            <SelineProfileCard
+                title="Plataforma y Nivel de Acceso"
+                subtitle="Detalles de tu rol operativo dentro de ShopCart E-Commerce"
+                icon={<StorefrontOutlined />}
             >
                 <ProfileRow
-                    icon={<BusinessOutlined />}
+                    icon={<StorefrontOutlined />}
                     label="Plataforma / Sistema"
                     value={
-                        <Typography variant="body2" sx={{ fontWeight: 600, color: 'primary.main' }}>
-                            Web Admin System
+                        <Typography variant="body2" sx={{ fontWeight: 500, color: '#0c0a09' }}>
+                            ShopCart E-Commerce Platform
                         </Typography>
                     }
                 />
                 <ProfileRow
                     icon={<MenuBookOutlined />}
                     label="Ámbito Operativo"
-                    value="Administración Central y Gestión de Sitios Web"
+                    value="Comercio Electrónico, Catálogo de Productos y Pedidos"
                 />
                 <ProfileRow
                     icon={<SecurityOutlined />}
-                    label="Nivel de Acceso"
+                    label="Rol Asignado"
                     isLast
                     value={rolesList.join(', ')}
                 />
-            </GoogleCard>
+            </SelineProfileCard>
 
             {/* Card 3: Seguridad y Estado de la Cuenta */}
-            <GoogleCard
+            <SelineProfileCard
                 title="Seguridad y Estado de la Cuenta"
                 subtitle="Control de acceso y registro en la plataforma"
                 icon={<SecurityOutlined />}
@@ -396,14 +429,15 @@ export const ProfilePage: React.FC = () => {
                     label="Estado de la Cuenta"
                     value={
                         <Chip
-                            icon={<CheckCircle fontSize="small" sx={{ color: 'success.main !important' }} />}
+                            icon={<CheckCircle fontSize="small" sx={{ color: '#0c0a09 !important' }} />}
                             label={displayUser.isActive !== false ? 'Activa y Verificada' : 'Inactiva'}
                             size="small"
                             sx={{
-                                bgcolor: 'rgba(46, 125, 50, 0.08)',
-                                color: 'success.dark',
-                                fontWeight: 600,
-                                borderRadius: '6px',
+                                bgcolor: '#fafaf9',
+                                border: '1px solid #e8e6e5',
+                                color: '#0c0a09',
+                                fontWeight: 500,
+                                borderRadius: '9999px',
                             }}
                         />
                     }
@@ -419,12 +453,19 @@ export const ProfilePage: React.FC = () => {
                             startIcon={<LockResetOutlined sx={{ fontSize: 16 }} />}
                             onClick={() => navigate('/auth/change-password')}
                             sx={{
-                                borderRadius: '8px',
+                                borderRadius: '9999px',
+                                border: '1px solid #e8e6e5',
+                                color: '#0c0a09',
                                 textTransform: 'none',
-                                fontWeight: 500,
+                                fontWeight: 400,
                                 fontSize: '12px',
-                                px: 1.75,
+                                px: 2,
                                 py: 0.5,
+                                '&:hover': {
+                                    borderColor: '#3398e1',
+                                    color: '#3398e1',
+                                    bgcolor: '#fafaf9',
+                                },
                             }}
                         >
                             Cambiar contraseña
@@ -446,12 +487,14 @@ export const ProfilePage: React.FC = () => {
                                 variant="caption"
                                 sx={{
                                     fontFamily: 'monospace',
-                                    bgcolor: 'action.selected',
+                                    bgcolor: '#fafaf9',
+                                    border: '1px solid #e8e6e5',
                                     px: 1,
                                     py: 0.5,
-                                    borderRadius: 1,
+                                    borderRadius: '6px',
                                     fontSize: '0.8rem',
                                     userSelect: 'all',
+                                    color: '#0c0a09',
                                 }}
                             >
                                 {displayUser.id}
@@ -459,16 +502,16 @@ export const ProfilePage: React.FC = () => {
                             <Tooltip title={copied ? '¡Copiado!' : 'Copiar ID'}>
                                 <IconButton size="small" onClick={() => handleCopyId(displayUser.id)}>
                                     {copied ? (
-                                        <Check fontSize="small" color="success" />
+                                        <Check fontSize="small" sx={{ color: '#3398e1' }} />
                                     ) : (
-                                        <ContentCopyOutlined fontSize="small" />
+                                        <ContentCopyOutlined fontSize="small" sx={{ color: '#78716c' }} />
                                     )}
                                 </IconButton>
                             </Tooltip>
                         </Box>
                     }
                 />
-            </GoogleCard>
+            </SelineProfileCard>
 
             <Snackbar
                 open={snackbar.open}
@@ -489,4 +532,3 @@ export const ProfilePage: React.FC = () => {
 };
 
 export default ProfilePage;
-

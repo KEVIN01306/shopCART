@@ -6,7 +6,7 @@ export const usersRoutes: RouteObject[] = [
     {
         index: true,
         element: (
-            <RouteProtector requiredPermission="users:read">
+            <RouteProtector requiredRole={['Administrador']}>
                 <UsersListPage />
             </RouteProtector>
         ),

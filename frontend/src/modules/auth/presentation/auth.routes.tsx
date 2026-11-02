@@ -18,6 +18,10 @@ export const authRoutes: RouteObject[] = [
         element: <LoginPage />,
     },
     {
+        path: 'register',
+        element: <LoginPage />,
+    },
+    {
         path: 'verify-account',
         children: [
             {

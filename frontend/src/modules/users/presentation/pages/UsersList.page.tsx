@@ -21,7 +21,7 @@ import ListTable, { type Column, type Action } from '../../../../shared/componen
 import ConfirmDialog from '../../../../shared/components/dialog/ConfirmDialog';
 import UserFormDialog from '../components/UserFormDialog';
 import { useAuthStore } from '../../../../core/store/authStore';
-import { hasPermission } from '../../../../core/utils/permissions';
+import { hasRole } from '../../../../core/utils/permissions';
 import {
     getUsersPaginated,
     disableUser,
@@ -32,9 +32,10 @@ import type { UserDto } from '../../domain/dto/users.dto';
 
 export const UsersListPage: React.FC = () => {
     const user = useAuthStore((state) => state.user);
-    const canCreate = hasPermission(user, 'users:create');
-    const canUpdate = hasPermission(user, 'users:update');
-    const canDelete = hasPermission(user, 'users:delete');
+    const isAdminUser = hasRole(user, 'Administrador');
+    const canCreate = isAdminUser;
+    const canUpdate = isAdminUser;
+    const canDelete = isAdminUser;
 
     const [users, setUsers] = useState<UserDto[]>([]);
     const [total, setTotal] = useState(0);
@@ -68,7 +69,7 @@ export const UsersListPage: React.FC = () => {
         } catch {
             setSnackbar({
                 open: true,
-                message: 'Failed to load users',
+                message: 'No se pudieron cargar los usuarios',
                 severity: 'error',
             });
         } finally {
@@ -91,8 +92,8 @@ export const UsersListPage: React.FC = () => {
         setFormDialogOpen(true);
     };
 
-    const handleOpenEdit = (user: UserDto) => {
-        setSelectedUser(user);
+    const handleOpenEdit = (row: UserDto) => {
+        setSelectedUser(row);
         setFormDialogOpen(true);
     };
 
@@ -103,15 +104,16 @@ export const UsersListPage: React.FC = () => {
             await disableUser(userToDisable.id);
             setSnackbar({
                 open: true,
-                message: 'User account disabled successfully',
+                message: 'Cuenta de usuario desactivada correctamente',
                 severity: 'success',
             });
             setUserToDisable(null);
             fetchUsers();
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { message?: string } } };
             setSnackbar({
                 open: true,
-                message: err.response?.data?.message || 'Failed to disable user',
+                message: axiosErr.response?.data?.message || 'Error al desactivar usuario',
                 severity: 'error',
             });
         } finally {
@@ -126,15 +128,16 @@ export const UsersListPage: React.FC = () => {
             await activateUser(userToActivate.id);
             setSnackbar({
                 open: true,
-                message: 'User account reactivated successfully',
+                message: 'Cuenta de usuario reactivada correctamente',
                 severity: 'success',
             });
             setUserToActivate(null);
             fetchUsers();
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { message?: string } } };
             setSnackbar({
                 open: true,
-                message: err.response?.data?.message || 'Failed to reactivate user',
+                message: axiosErr.response?.data?.message || 'Error al reactivar usuario',
                 severity: 'error',
             });
         } finally {
@@ -149,15 +152,16 @@ export const UsersListPage: React.FC = () => {
             await deleteUser(userToDelete.id);
             setSnackbar({
                 open: true,
-                message: 'User deleted successfully',
+                message: 'Usuario eliminado correctamente',
                 severity: 'success',
             });
             setUserToDelete(null);
             fetchUsers();
-        } catch (err: any) {
+        } catch (err: unknown) {
+            const axiosErr = err as { response?: { data?: { message?: string } } };
             setSnackbar({
                 open: true,
-                message: err.response?.data?.message || 'Failed to delete user',
+                message: axiosErr.response?.data?.message || 'Error al eliminar usuario',
                 severity: 'error',
             });
         } finally {
@@ -168,15 +172,17 @@ export const UsersListPage: React.FC = () => {
     const columns: Column[] = [
         {
             id: 'fullName',
-            name: 'User Name',
-            format: (_: any, row: UserDto) => {
+            name: 'Usuario',
+            format: (_: unknown, row: UserDto) => {
                 const fullName = `${row.firstName} ${row.lastName}`.trim();
-                const initials = fullName
-                    .split(' ')
-                    .slice(0, 2)
-                    .map((n) => n[0])
-                    .join('')
-                    .toUpperCase() || 'U';
+                const initials =
+                    fullName
+                        .split(' ')
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((n) => n[0])
+                        .join('')
+                        .toUpperCase() || 'U';
 
                 return (
                     <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
@@ -185,14 +191,15 @@ export const UsersListPage: React.FC = () => {
                                 width: 32,
                                 height: 32,
                                 fontSize: '12px',
-                                fontWeight: 600,
-                                bgcolor: row.isActive ? '#006bff' : '#94a3b8',
+                                fontWeight: 500,
+                                bgcolor: row.isActive ? '#1c1917' : '#a8a29e',
+                                color: '#ffffff',
                             }}
                         >
                             {initials}
                         </Avatar>
                         <Box>
-                            <Typography sx={{ fontWeight: 600, fontSize: '13px', color: 'text.primary' }}>
+                            <Typography sx={{ fontWeight: 500, fontSize: '13px', color: '#0c0a09' }}>
                                 {fullName}
                             </Typography>
                         </Box>
@@ -202,56 +209,74 @@ export const UsersListPage: React.FC = () => {
         },
         {
             id: 'email',
-            name: 'Email Address',
+            name: 'Correo Electrónico',
             format: (value: string) => (
-                <Typography sx={{ fontSize: '13px', color: 'text.secondary' }}>
+                <Typography sx={{ fontSize: '13px', color: '#78716c' }}>
                     {value}
                 </Typography>
             ),
         },
         {
             id: 'roles',
-            name: 'Roles',
-            format: (_: any, row: UserDto) => (
-                <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
-                    {row.roles && row.roles.length > 0 ? (
-                        row.roles.map((role) => (
+            name: 'Rol',
+            format: (_: unknown, row: UserDto) => {
+                const roleList =
+                    row.roles && row.roles.length > 0
+                        ? row.roles
+                        : row.role
+                        ? [row.role]
+                        : ['Cliente'];
+
+                return (
+                    <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                        {roleList.map((role) => (
                             <Chip
                                 key={role}
                                 size="small"
                                 label={role}
-                                color={
-                                    role === 'SUPER_ADMIN'
-                                        ? 'error'
-                                        : role === 'ADMIN'
-                                        ? 'primary'
-                                        : 'default'
-                                }
                                 sx={{
-                                    fontWeight: 600,
-                                    fontSize: '10px',
-                                    height: 20,
+                                    fontWeight: 500,
+                                    fontSize: '11px',
+                                    height: 22,
+                                    borderRadius: '9999px',
+                                    bgcolor:
+                                        role === 'Administrador'
+                                            ? '#1c1917'
+                                            : role === 'Operador'
+                                            ? '#c1e1f7'
+                                            : '#fafaf9',
+                                    color:
+                                        role === 'Administrador'
+                                            ? '#ffffff'
+                                            : role === 'Operador'
+                                            ? '#3398e1'
+                                            : '#0c0a09',
+                                    border:
+                                        role === 'Administrador'
+                                            ? '1px solid #1c1917'
+                                            : '1px solid #e8e6e5',
                                 }}
                             />
-                        ))
-                    ) : (
-                        <Typography sx={{ fontSize: '12px', color: 'text.secondary' }}>—</Typography>
-                    )}
-                </Stack>
-            ),
+                        ))}
+                    </Stack>
+                );
+            },
         },
         {
             id: 'status',
-            name: 'Account Status',
-            format: (_: any, row: UserDto) => (
+            name: 'Estado',
+            format: (_: unknown, row: UserDto) => (
                 <Chip
                     size="small"
-                    label={row.isActive ? 'Active' : 'Disabled'}
-                    color={row.isActive ? 'success' : 'default'}
+                    label={row.isActive ? 'Activo' : 'Inactivo'}
                     sx={{
-                        fontWeight: 600,
+                        fontWeight: 500,
                         fontSize: '11px',
                         height: 22,
+                        borderRadius: '9999px',
+                        bgcolor: row.isActive ? '#fafaf9' : '#fafaf9',
+                        color: row.isActive ? '#0c0a09' : '#a8a29e',
+                        border: '1px solid #e8e6e5',
                     }}
                 />
             ),
@@ -260,29 +285,29 @@ export const UsersListPage: React.FC = () => {
 
     const actions: Action[] = [
         {
-            name: 'Edit',
+            name: 'Editar',
             icon: <Edit fontSize="small" />,
             visible: () => canUpdate,
             onClick: (row: UserDto) => handleOpenEdit(row),
         },
         {
-            name: 'Disable Account',
+            name: 'Desactivar cuenta',
             icon: <Block fontSize="small" />,
-            color: '#eab308',
+            color: '#78716c',
             visible: (row: UserDto) => row.isActive && canUpdate,
             onClick: (row: UserDto) => setUserToDisable(row),
         },
         {
             name: 'Reactivar usuario',
             icon: <CheckCircle fontSize="small" />,
-            color: '#10b981',
+            color: '#3398e1',
             visible: (row: UserDto) => !row.isActive && canUpdate,
             onClick: (row: UserDto) => setUserToActivate(row),
         },
         {
-            name: 'Delete User',
+            name: 'Eliminar usuario',
             icon: <Delete fontSize="small" />,
-            color: '#ef4444',
+            color: '#0c0a09',
             visible: () => canDelete,
             onClick: (row: UserDto) => setUserToDelete(row),
         },
@@ -291,9 +316,9 @@ export const UsersListPage: React.FC = () => {
     return (
         <Box sx={{ width: '100%', py: 1 }}>
             <PageHeader
-                title="Users Management"
-                subtitle="Directory of authenticated users, security access, and account statuses"
-                actionLabel={canCreate ? "New User" : undefined}
+                title="Gestión de Usuarios"
+                subtitle="Directorio de usuarios registrados, asignación de roles (Cliente, Operador, Administrador) y estado de cuenta"
+                actionLabel={canCreate ? 'Nuevo Usuario' : undefined}
                 actionIcon={canCreate ? <PersonAdd /> : undefined}
                 onAction={canCreate ? handleOpenCreate : undefined}
             />
@@ -308,7 +333,7 @@ export const UsersListPage: React.FC = () => {
                     }
                 }}
                 onSubmit={handleSearchSubmit}
-                placeholder="Search users by name or email..."
+                placeholder="Buscar usuarios por nombre o correo..."
                 loading={loading}
             />
 
@@ -316,7 +341,7 @@ export const UsersListPage: React.FC = () => {
                 data={users}
                 columns={columns}
                 actions={actions}
-                emptyMessage="No users found"
+                emptyMessage="No se encontraron usuarios registrados"
                 pagination={{
                     total,
                     limit,
@@ -336,7 +361,7 @@ export const UsersListPage: React.FC = () => {
                 onSuccess={() => {
                     setSnackbar({
                         open: true,
-                        message: selectedUser ? 'User updated successfully' : 'User created successfully',
+                        message: selectedUser ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente',
                         severity: 'success',
                     });
                     fetchUsers();
@@ -347,16 +372,20 @@ export const UsersListPage: React.FC = () => {
             {/* Disable Account Confirmation Dialog */}
             <ConfirmDialog
                 open={Boolean(userToDisable)}
-                title="Disable User Account?"
+                title="¿Desactivar cuenta de usuario?"
                 description={
                     <span>
-                        Are you sure you want to disable account access for <strong>{userToDisable?.firstName} {userToDisable?.lastName}</strong> ({userToDisable?.email})?
+                        ¿Estás seguro de que deseas desactivar el acceso de{' '}
+                        <strong>
+                            {userToDisable?.firstName} {userToDisable?.lastName}
+                        </strong>{' '}
+                        ({userToDisable?.email})?
                     </span>
                 }
                 onClose={() => setUserToDisable(null)}
                 onConfirm={handleConfirmDisable}
                 isLoading={isProcessing}
-                confirmText="Disable Account"
+                confirmText="Desactivar cuenta"
                 confirmColor="warning"
             />
 
@@ -366,7 +395,11 @@ export const UsersListPage: React.FC = () => {
                 title="¿Reactivar usuario?"
                 description={
                     <span>
-                        El usuario <strong>{userToActivate?.firstName} {userToActivate?.lastName}</strong> ({userToActivate?.email}) volverá a tener acceso al sistema.
+                        El usuario{' '}
+                        <strong>
+                            {userToActivate?.firstName} {userToActivate?.lastName}
+                        </strong>{' '}
+                        ({userToActivate?.email}) volverá a tener acceso al sistema.
                     </span>
                 }
                 onClose={() => setUserToActivate(null)}
@@ -379,16 +412,20 @@ export const UsersListPage: React.FC = () => {
             {/* Delete User Confirmation Dialog */}
             <ConfirmDialog
                 open={Boolean(userToDelete)}
-                title="Delete User?"
+                title="¿Eliminar usuario?"
                 description={
                     <span>
-                        Are you sure you want to permanently delete <strong>{userToDelete?.firstName} {userToDelete?.lastName}</strong>? This action cannot be undone.
+                        ¿Estás seguro de que deseas eliminar a{' '}
+                        <strong>
+                            {userToDelete?.firstName} {userToDelete?.lastName}
+                        </strong>
+                        ?
                     </span>
                 }
                 onClose={() => setUserToDelete(null)}
                 onConfirm={handleConfirmDelete}
                 isLoading={isProcessing}
-                confirmText="Delete"
+                confirmText="Eliminar"
                 confirmColor="error"
             />
 

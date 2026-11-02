@@ -84,7 +84,6 @@ export const PasswordResetRequestPage = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#f8f9fb',
                 p: 2,
             }}
         >
@@ -212,8 +211,8 @@ export const PasswordResetRequestPage = () => {
                                     {isSubmitting
                                         ? 'Enviando código...'
                                         : currentUser
-                                        ? 'Enviar código de verificación'
-                                        : 'Send verification code'}
+                                            ? 'Enviar código de verificación'
+                                            : 'Send verification code'}
                                 </Button>
                             </Stack>
                         </form>

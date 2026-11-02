@@ -1,15 +1,6 @@
 import { z } from 'zod';
 
-export const ALLOWED_USER_EMAIL_DOMAINS = ['pharmadel.com', 'cadimportinc.com', 'gmail.com'] as const;
-
-export const isValidUserEmailDomain = (email?: string | null): boolean => {
-    if (!email || typeof email !== 'string') return false;
-    const parts = email.trim().toLowerCase().split('@');
-    if (parts.length !== 2) return false;
-    const domain = parts[1];
-    if (!domain) return false;
-    return (ALLOWED_USER_EMAIL_DOMAINS as readonly string[]).includes(domain);
-};
+export const VALID_SYSTEM_ROLES = ['Cliente', 'Operador', 'Administrador'] as const;
 
 export const createUserSchema = z
     .object({
@@ -17,25 +8,22 @@ export const createUserSchema = z
             .string()
             .trim()
             .min(1, 'El correo electrónico es requerido')
-            .email('Ingrese un correo electrónico válido')
-            .refine(isValidUserEmailDomain, {
-                message: 'Dominio inválido para este usuario. Solo se permiten correos @pharmadel.com o @cadimportinc.com.',
-            }),
+            .email('Ingrese un correo electrónico válido'),
         passwordRaw: z.string().optional().or(z.literal('')),
         autoGeneratePassword: z.boolean().optional(),
         firstName: z
             .string()
             .trim()
-            .min(1, 'First name is required')
-            .max(50, 'Maximum 50 characters'),
+            .min(1, 'El nombre es obligatorio')
+            .max(50, 'Máximo 50 caracteres'),
         lastName: z
             .string()
             .trim()
-            .min(1, 'Last name is required')
-            .max(50, 'Maximum 50 characters'),
+            .min(1, 'El apellido es obligatorio')
+            .max(50, 'Máximo 50 caracteres'),
         roles: z
             .array(z.string())
-            .min(1, 'Please select at least one role for the user'),
+            .min(1, 'Seleccione al menos un rol para el usuario'),
     })
     .refine(
         (data) => {
@@ -55,34 +43,28 @@ export const updateUserSchema = z.object({
         .string()
         .trim()
         .email('Ingrese un correo electrónico válido')
-        .refine(
-            (val) => !val || val === '' || isValidUserEmailDomain(val),
-            {
-                message: 'Dominio inválido para este usuario. Solo se permiten correos @pharmadel.com o @cadimportinc.com.',
-            }
-        )
         .optional()
         .or(z.literal('')),
     passwordRaw: z
         .string()
-        .min(8, 'Password must be at least 8 characters long')
+        .min(8, 'La contraseña debe tener al menos 8 caracteres')
         .optional()
         .or(z.literal('')),
     firstName: z
         .string()
         .trim()
-        .min(1, 'First name cannot be empty')
-        .max(50, 'Maximum 50 characters')
+        .min(1, 'El nombre no puede estar vacío')
+        .max(50, 'Máximo 50 caracteres')
         .optional(),
     lastName: z
         .string()
         .trim()
-        .min(1, 'Last name cannot be empty')
-        .max(50, 'Maximum 50 characters')
+        .min(1, 'El apellido no puede estar vacío')
+        .max(50, 'Máximo 50 caracteres')
         .optional(),
     roles: z
         .array(z.string())
-        .min(1, 'Please select at least one role')
+        .min(1, 'Seleccione al menos un rol')
         .optional(),
 });
 

@@ -29,7 +29,7 @@ export const getUsersPaginated = async (
     limit: number = 10,
     q?: string
 ): Promise<PaginatedUsersResponse> => {
-    const params: Record<string, any> = { page, limit };
+    const params: Record<string, unknown> = { page, limit };
     if (q) params.q = q;
 
     const response = await api.get<ApiResponse<UserDto[]>>('/users', { params });

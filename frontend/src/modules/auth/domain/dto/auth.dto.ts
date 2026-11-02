@@ -7,6 +7,13 @@ import type { LoginFormValues } from '../schemas/auth.schemas';
  */
 export type LoginRequestDto = LoginFormValues;
 
+export interface RegisterRequestDto {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+}
+
 export interface LoginResponseDto {
     accessToken: string;
     refreshToken?: string;

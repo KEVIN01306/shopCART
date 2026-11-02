@@ -1,6 +1,8 @@
+export type SystemRoleName = 'Cliente' | 'Operador' | 'Administrador';
+
 export interface RoleDto {
     id: string;
-    name: string;
+    name: SystemRoleName | string;
     description?: string | null;
 }
 
@@ -10,6 +12,7 @@ export interface UserDto {
     firstName: string;
     lastName: string;
     isActive: boolean;
+    role?: SystemRoleName | string;
     roles?: string[];
     createdAt?: string;
     updatedAt?: string;
@@ -21,6 +24,7 @@ export interface CreateUserDto {
     autoGeneratePassword?: boolean;
     firstName: string;
     lastName: string;
+    role?: string;
     roles: string[];
 }
 
@@ -29,5 +33,6 @@ export interface UpdateUserDto {
     passwordRaw?: string;
     firstName?: string;
     lastName?: string;
+    role?: string;
     roles?: string[];
 }

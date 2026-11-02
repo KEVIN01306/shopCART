@@ -73,7 +73,6 @@ export const VerifyAccountRequestPage = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                backgroundColor: '#f8f9fb',
                 p: 2,
             }}
         >

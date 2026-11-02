@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { API_BASE_URL } from '../../../../core/api/config';
-import type { LoginRequestDto, LoginResponseDto } from '../../domain/dto/auth.dto';
+import type { LoginRequestDto, LoginResponseDto, RegisterRequestDto } from '../../domain/dto/auth.dto';
 import type { AuthUser } from '../../domain/interfaces/auth.interfaces';
 
 const AUTH_BASE_URL = `${API_BASE_URL}/auth`;
@@ -18,6 +18,19 @@ interface ApiResponse<T> {
 const loginUser = async (data: LoginRequestDto): Promise<LoginResponseDto> => {
     const response = await axios.post<ApiResponse<LoginResponseDto>>(
         `${AUTH_BASE_URL}/login`,
+        data,
+        { withCredentials: true }
+    );
+    return response.data.data;
+};
+
+/**
+ * Registers a new customer user (Role: Cliente) with immediate verification.
+ * Saves tokens and starts session directly.
+ */
+const registerUser = async (data: RegisterRequestDto): Promise<LoginResponseDto> => {
+    const response = await axios.post<ApiResponse<LoginResponseDto>>(
+        `${AUTH_BASE_URL}/register`,
         data,
         { withCredentials: true }
     );
@@ -48,4 +61,4 @@ const getCurrentUser = async (accessToken: string): Promise<AuthUser> => {
     return response.data.data;
 };
 
-export { loginUser, refreshSession, getCurrentUser };
+export { loginUser, registerUser, refreshSession, getCurrentUser };
