@@ -33,11 +33,15 @@ Bienvenido a **shopCART**, una solución integral de comercio electrónico de al
 - **Motor de Base de Datos**: **Microsoft SQL Server 2019+** (Local, Docker o Azure SQL Database) en el puerto `1433`.
 
 ### Variables de Entorno del Backend (`backend/.env`)
-Crea el archivo `backend/.env` basándote en `backend/.env.example`:
+Crea el archivo `backend/.env` basándote en `backend/env.example`:
+Crea el archivo `frontend/.env` basándote en `frontend/env.example`:
+Las variables de entorno de los example son las mismas que se deben usar, solo copiarlas en el `.env` del backend y frontend
+
+Las **OTP_PROVIDER** y **OTP_URL** son keys reales de un servicio externo llamado **send-otp** este servicio lo desplegue para esto en especifico: usarlo sin problemas.
 
 ```env
-PORT=4000
-FRONTEND_URL=http://localhost:8001
+PORT=5600
+FRONTEND_URL=http://localhost:5601
 
 # Microsoft SQL Server (Transact-SQL)
 DB_SERVER=localhost
@@ -56,9 +60,8 @@ JWT_ACCESS_TTL=15m
 JWT_REFRESH_TTL=7d
 
 # Proveedores de Servicio (Email & OTP)
-OTP_PROVIDER=mock
-EMAIL_PROVIDER=mock
-RESEND_API_KEY=re_tu_api_key_opcional
+OTP_PROVIDER=auth_live_f55512036f70814ead9ad7a2311e3d7769330dd9333b1707
+OTP_URL=https://send-otp-shopcart.onrender.com/api/v1/
 
 # Seed Inicial
 SEED_ADMIN_EMAIL=kevin01306@gmail.com
@@ -67,7 +70,7 @@ SEED_ADMIN_PASSWORD=12345678
 
 ### Variables de Entorno del Frontend (`frontend/.env`)
 ```env
-VITE_API_URL=http://localhost:4000/api
+VITE_API_URL=http://localhost:5600/api
 ```
 
 ---
