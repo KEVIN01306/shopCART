@@ -13,7 +13,7 @@ router.use(authMiddleware.routeProtect);
 
 router.get(
     "/roles",
-    authMiddleware.checkPermissionSome(["users:create", "users:update", "roles:read", "users:read"]),
+    authMiddleware.checkRole(["Administrador"]),
     usersController.listRoles
 );
 
@@ -25,20 +25,20 @@ router.patch(
 
 router.get(
     "/",
-    authMiddleware.checkPermission("users:read"),
+    authMiddleware.checkRole(["Administrador"]),
     usersController.list
 );
 
 router.post(
     "/",
-    authMiddleware.checkPermission("users:create"),
+    authMiddleware.checkRole(["Administrador"]),
     validatedMiddleware.validateBody(CreateUserSchema),
     usersController.create
 );
 
 router.put(
     "/:id",
-    authMiddleware.checkPermission("users:update"),
+    authMiddleware.checkRole(["Administrador"]),
     validatedMiddleware.validateParams(UserIdSchema),
     validatedMiddleware.validateBody(UpdateUserSchema),
     usersController.update
@@ -46,21 +46,21 @@ router.put(
 
 router.patch(
     "/:id/activate",
-    authMiddleware.checkPermission("users:update"),
+    authMiddleware.checkRole(["Administrador"]),
     validatedMiddleware.validateParams(UserIdSchema),
     usersController.activate
 );
 
 router.patch(
     "/:id/disable",
-    authMiddleware.checkPermission("users:update"),
+    authMiddleware.checkRole(["Administrador"]),
     validatedMiddleware.validateParams(UserIdSchema),
     usersController.disable
 );
 
 router.delete(
     "/:id",
-    authMiddleware.checkPermission("users:delete"),
+    authMiddleware.checkRole(["Administrador"]),
     validatedMiddleware.validateParams(UserIdSchema),
     usersController.delete
 );

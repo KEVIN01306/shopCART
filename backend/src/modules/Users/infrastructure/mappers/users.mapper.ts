@@ -1,45 +1,68 @@
 import type { User, GetUser, GetSimpleUser } from "../../domain/user.entity.js";
 
+export interface UserDbRow {
+    id: string;
+    email: string;
+    password_hash: string;
+    first_name: string;
+    last_name: string;
+    avatar_url?: string | null;
+    role?: string | null;
+    is_active: boolean | number;
+    is_verify: boolean | number;
+    created_at: Date | string;
+    updated_at: Date | string;
+    total_count?: number;
+}
+
 export class UsersMapper {
-    static toDomain(user: any): User {
+    static toDomain(row: UserDbRow): User {
+        const role = row.role || 'Cliente';
         return {
-            id: user.id,
-            email: user.email,
-            passwordHash: user.passwordHash,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            isActive: user.isActive,
-            isVerify: Boolean(user.isVerify),
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
+            id: row.id,
+            email: row.email,
+            passwordHash: row.password_hash,
+            firstName: row.first_name,
+            lastName: row.last_name,
+            avatarUrl: row.avatar_url ?? null,
+            role,
+            roles: [role],
+            isActive: Boolean(row.is_active),
+            isVerify: Boolean(row.is_verify),
+            createdAt: new Date(row.created_at),
+            updatedAt: new Date(row.updated_at),
         };
     }
 
-    static toGetUser(user: any): GetUser {
-        const roles = user.userRoles?.map((ur: any) => ur.role?.name || ur.role).filter(Boolean) || [];
+    static toGetUser(row: UserDbRow): GetUser {
+        const role = row.role || 'Cliente';
         return {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            isActive: user.isActive,
-            isVerify: Boolean(user.isVerify),
-            roles,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt
+            id: row.id,
+            email: row.email,
+            firstName: row.first_name,
+            lastName: row.last_name,
+            avatarUrl: row.avatar_url ?? null,
+            role,
+            roles: [role],
+            isActive: Boolean(row.is_active),
+            isVerify: Boolean(row.is_verify),
+            createdAt: new Date(row.created_at),
+            updatedAt: new Date(row.updated_at),
         };
     }
 
-    static toGetSimpleUser(user: any): GetSimpleUser {
-        const roles = user.userRoles?.map((ur: any) => ur.role?.name || ur.role).filter(Boolean) || [];
+    static toGetSimpleUser(row: UserDbRow): GetSimpleUser {
+        const role = row.role || 'Cliente';
         return {
-            id: user.id,
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            isActive: user.isActive,
-            isVerify: Boolean(user.isVerify),
-            roles
+            id: row.id,
+            email: row.email,
+            firstName: row.first_name,
+            lastName: row.last_name,
+            avatarUrl: row.avatar_url ?? null,
+            isActive: Boolean(row.is_active),
+            isVerify: Boolean(row.is_verify),
+            role,
+            roles: [role],
         };
     }
 }

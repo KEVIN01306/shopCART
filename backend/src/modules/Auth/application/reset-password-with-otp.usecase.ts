@@ -2,8 +2,7 @@ import type JwtProvider from "../domain/jwt.provider.js";
 import type { UsersRepository } from "../../Users/domain/users.repository.js";
 import type { AuthRepository } from "../domain/auth.repository.js";
 import type { HashProvider } from "@shared/domain/hash.provider.js";
-import type { AuditLogService } from "../../Audit/application/audit-log.service.js";
-import type { AuditContext } from "../../Audit/domain/audit-log.entity.js";
+import type { AuditContext } from "@presentation/base.controller.js";
 import AppError from "@shared/errors/AppError.js";
 
 export interface ResetPasswordWithOtpDTO {
@@ -18,13 +17,12 @@ export class ResetPasswordWithOtpUseCase {
         private readonly jwtProvider: JwtProvider,
         private readonly usersRepository: UsersRepository,
         private readonly authRepository: AuthRepository,
-        private readonly hashProvider: HashProvider,
-        private readonly auditLogService: AuditLogService
+        private readonly hashProvider: HashProvider
     ) {}
 
-    async execute(dto: ResetPasswordWithOtpDTO, context?: AuditContext): Promise<void> {
+    async execute(dto: ResetPasswordWithOtpDTO, _context?: AuditContext): Promise<void> {
         // 1. Verify reset token validity and single-use status
-        const { userId, email, jti } = await this.jwtProvider.verifyResetToken(dto.resetToken);
+        const { userId, jti } = await this.jwtProvider.verifyResetToken(dto.resetToken);
 
         // 2. Fetch user with password
         const user = await this.usersRepository.findByIdWithPassword(userId);
@@ -78,19 +76,5 @@ export class ResetPasswordWithOtpUseCase {
 
         // 9. Consume single-use reset token
         this.jwtProvider.consumeResetToken(jti);
-
-        // 9. Record audit log
-        await this.auditLogService.record({
-            userId,
-            action: 'UPDATE',
-            resource: 'auth',
-            resourceId: userId,
-            context,
-            details: {
-                action: "password_reset_otp_completed",
-                email: email.replace(/(.{2})(.*)(@.*)/, "$1***$3"),
-                description: "Usuario actualizó su contraseña exitosamente mediante verificación OTP.",
-            }
-        });
     }
 }

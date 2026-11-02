@@ -8,4 +8,14 @@ export interface AuthRepository {
     findSessionByUserId(userId: AuthUser['id']): Promise<AuthSession | null>
     upsertSession(userId: AuthUser['id'], token: AuthSession['token'], expiresAt: Date): Promise<void>
     deleteSession(userId: AuthUser['id']): Promise<void>
+    createUser(data: {
+        id: string;
+        email: string;
+        passwordHash: string;
+        firstName: string;
+        lastName: string;
+        avatarUrl?: string | null;
+        role?: string;
+        isVerify?: boolean;
+    }): Promise<AuthUser>;
 }

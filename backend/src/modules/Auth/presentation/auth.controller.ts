@@ -1,5 +1,6 @@
 import ResponseHttp from "@app/http/response.http.js";
 import type { LoginUseCase } from "../application/login.usecase.js";
+import type { RegisterUseCase } from "../application/register.usecase.js";
 import type { Request, Response, NextFunction } from "express";
 import AppError from "@shared/errors/AppError.js";
 import type { RefreshTokenUseCase } from "../application/refresh-token.usecase.js";
@@ -28,10 +29,34 @@ export class AuthController extends BaseController {
         private readonly logoutUseCase: LogoutUseCase,
         private readonly sendOtpUseCase?: SendOtpUseCase,
         private readonly verifyOtpUseCase?: VerifyOtpUseCase,
-        private readonly resetPasswordWithOtpUseCase?: ResetPasswordWithOtpUseCase
+        private readonly resetPasswordWithOtpUseCase?: ResetPasswordWithOtpUseCase,
+        private readonly registerUseCase?: RegisterUseCase
     ) {
         super();
     }
+
+    register = async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            if (!this.registerUseCase) {
+                throw new AppError("Servicio de registro no configurado", "INTERNAL_SERVER_ERROR", 500);
+            }
+            const { firstName, lastName, email, password } = req.body;
+            const auditContext = this.getAuditContext(req, res);
+
+            const { accessToken, refreshToken, user } = await this.registerUseCase.execute(
+                { firstName, lastName, email, password },
+                auditContext
+            );
+
+            res.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, COOKIE_OPTIONS);
+
+            return res.status(201).json(
+                ResponseHttp.success("Registro exitoso", { accessToken, user })
+            );
+        } catch (error) {
+            next(error);
+        }
+    };
 
     login = async (req: Request, res: Response, next: NextFunction) => {
         try {

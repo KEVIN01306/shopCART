@@ -1,24 +1,12 @@
 import type { AuthRepository } from "../domain/auth.repository.js";
-import type { AuditLogService } from "../../Audit/application/audit-log.service.js";
-import type { AuditContext } from "../../Audit/domain/audit-log.entity.js";
+import type { AuditContext } from "@presentation/base.controller.js";
 
 export class LogoutUseCase {
     constructor(
-        private readonly authRepository: AuthRepository,
-        private readonly auditLogService: AuditLogService
+        private readonly authRepository: AuthRepository
     ) { }
 
-    async execute(userId: string, context?: AuditContext): Promise<void> {
-        // Delete session record from database
+    async execute(userId: string, _context?: AuditContext): Promise<void> {
         await this.authRepository.deleteSession(userId);
-
-        // Record audit log
-        await this.auditLogService.record({
-            userId,
-            action: "LOGOUT",
-            resource: "auth",
-            resourceId: userId,
-            context
-        });
     }
 }

@@ -1,6 +1,15 @@
 import type { Request, Response } from 'express';
 import AppError from '@shared/errors/AppError.js';
-import type { AuditContext } from '@modules/Audit/domain/audit-log.entity.js';
+
+export interface RequestContext {
+    userId: string | null;
+    ip?: string;
+    userAgent?: string;
+    method?: string;
+    path?: string;
+}
+
+export type AuditContext = RequestContext;
 
 abstract class BaseController {
     constructor() { }
@@ -31,7 +40,6 @@ abstract class BaseController {
         const ip = typeof forwarded === 'string'
             ? forwarded.split(',')[0]?.trim() || undefined
             : req.socket?.remoteAddress || req.ip || undefined;
-
 
         const userAgent = req.headers['user-agent'] as string | undefined;
 

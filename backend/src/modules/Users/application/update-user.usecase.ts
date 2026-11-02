@@ -3,17 +3,15 @@ import type { UpdateUser, GetUser } from "../domain/user.entity.js";
 import AppError from "@shared/errors/AppError.js";
 import { UniqueConstraintError } from "@shared/db/database/errors/UniqueConstraintError.js";
 import { NotFoundPersistenceError } from "@shared/db/database/errors/NotFoundPersistenceError.js";
-import type { AuditLogService } from "../../Audit/application/audit-log.service.js";
-import type { AuditContext } from "../../Audit/domain/audit-log.entity.js";
+import type { AuditContext } from "@presentation/base.controller.js";
 import { isValidUserEmailDomain } from "../presentation/users.schemas.js";
 
 export class UpdateUserUseCase {
     constructor(
-        private readonly usersRepository: UsersRepository,
-        private readonly auditLogService: AuditLogService
+        private readonly usersRepository: UsersRepository
     ) {}
 
-    async execute(id: string, data: UpdateUser, context?: AuditContext): Promise<GetUser> {
+    async execute(id: string, data: UpdateUser, _context?: AuditContext): Promise<GetUser> {
         try {
             const user = await this.usersRepository.findById(id);
             if (!user) {
@@ -23,8 +21,8 @@ export class UpdateUserUseCase {
             if (data.email && data.email !== user.email) {
                 if (!isValidUserEmailDomain(data.email)) {
                     throw new AppError(
-                        "Dominio inválido para este usuario. Solo se permiten correos @pharmadel.com o @cadimportinc.com.",
-                        "INVALID_EMAIL_DOMAIN",
+                        "Formato de correo electrónico inválido.",
+                        "INVALID_EMAIL_FORMAT",
                         400
                     );
                 }
@@ -36,28 +34,6 @@ export class UpdateUserUseCase {
             }
 
             const updatedUser = await this.usersRepository.update(id, data);
-
-            await this.auditLogService.record({
-                userId: context?.userId,
-                action: 'UPDATE',
-                resource: 'user',
-                resourceId: updatedUser.id,
-                context,
-                before: {
-                    email: user.email,
-                    firstName: user.firstName,
-                    lastName: user.lastName,
-                    roles: user.roles,
-                    isActive: user.isActive
-                },
-                after: {
-                    email: updatedUser.email,
-                    firstName: updatedUser.firstName,
-                    lastName: updatedUser.lastName,
-                    roles: updatedUser.roles,
-                    isActive: updatedUser.isActive
-                }
-            });
 
             return updatedUser;
         } catch (error) {
@@ -74,4 +50,3 @@ export class UpdateUserUseCase {
         }
     }
 }
-

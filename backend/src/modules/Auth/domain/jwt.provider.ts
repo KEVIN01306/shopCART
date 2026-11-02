@@ -1,7 +1,6 @@
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose';
 import AppError from '@shared/errors/AppError.js';
 
-
 class JwtProvider {
     private readonly secret: Uint8Array;
     private readonly issuer: string;
@@ -16,13 +15,17 @@ class JwtProvider {
         this.issuer = process.env.JWT_ISS;
         this.audience = process.env.JWT_AUD;
     }
-    
+
     async generateTokens(
         userId: string,
-        roles: string[],
-        permissions: string[]
+        roles: string[] | string
     ) {
-        const payload: JWTPayload = { roles, permissions };
+        const rolesArray = Array.isArray(roles) ? roles : [roles];
+        const primaryRole = rolesArray[0] || 'Cliente';
+        const payload: JWTPayload = {
+            role: primaryRole,
+            roles: rolesArray.length > 0 ? rolesArray : [primaryRole],
+        };
 
         const accessToken = await new SignJWT(payload)
             .setProtectedHeader({ alg: 'HS256' })
@@ -42,7 +45,7 @@ class JwtProvider {
             .setExpirationTime(process.env.JWT_REFRESH_TTL || '7d')
             .sign(this.secret);
 
-        return { accessToken, refreshToken }
+        return { accessToken, refreshToken };
     }
 
     async verifyToken(token: string): Promise<JWTPayload> {

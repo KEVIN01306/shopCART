@@ -7,7 +7,7 @@ export interface RoleResponse {
 }
 
 export class ListRolesUseCase {
-    constructor(private readonly usersRepository: UsersRepository) {}
+    constructor(private readonly usersRepository: UsersRepository) { }
 
     async execute(): Promise<RoleResponse[]> {
         return this.usersRepository.findAllRoles();

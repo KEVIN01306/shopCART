@@ -14,7 +14,7 @@ export interface ListUsersResult {
 }
 
 export class ListUsersUseCase {
-    constructor(private readonly usersRepository: UsersRepository) {}
+    constructor(private readonly usersRepository: UsersRepository) { }
 
     async execute(params?: ListUsersParams): Promise<ListUsersResult> {
         try {

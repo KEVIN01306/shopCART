@@ -2,16 +2,14 @@ import type { UsersRepository } from "../domain/users.repository.js";
 import type { GetUser } from "../domain/user.entity.js";
 import AppError from "@shared/errors/AppError.js";
 import { NotFoundPersistenceError } from "@shared/db/database/errors/NotFoundPersistenceError.js";
-import type { AuditLogService } from "../../Audit/application/audit-log.service.js";
-import type { AuditContext } from "../../Audit/domain/audit-log.entity.js";
+import type { AuditContext } from "@presentation/base.controller.js";
 
 export class ActivateUserUseCase {
     constructor(
-        private readonly usersRepository: UsersRepository,
-        private readonly auditLogService: AuditLogService
+        private readonly usersRepository: UsersRepository
     ) {}
 
-    async execute(id: string, context?: AuditContext): Promise<GetUser> {
+    async execute(id: string, _context?: AuditContext): Promise<GetUser> {
         try {
             const user = await this.usersRepository.findById(id);
             if (!user) {
@@ -23,21 +21,6 @@ export class ActivateUserUseCase {
             }
 
             const activatedUser = await this.usersRepository.activate(id);
-
-            await this.auditLogService.record({
-                userId: context?.userId,
-                action: 'UPDATE',
-                resource: 'user',
-                resourceId: id,
-                context,
-                before: { isActive: user.isActive },
-                after: { isActive: true },
-                details: {
-                    userEmail: user.email,
-                    action: "activate",
-                    description: "User account reactivated"
-                }
-            });
 
             return activatedUser;
         } catch (error) {

@@ -1,7 +1,6 @@
 import type { OtpProvider, SendOtpResult } from "../domain/otp.provider.js";
 import type { UsersRepository } from "../../Users/domain/users.repository.js";
-import type { AuditLogService } from "../../Audit/application/audit-log.service.js";
-import type { AuditContext } from "../../Audit/domain/audit-log.entity.js";
+import type { AuditContext } from "@presentation/base.controller.js";
 import AppError from "@shared/errors/AppError.js";
 
 export interface SendOtpDTO {
@@ -12,11 +11,10 @@ export interface SendOtpDTO {
 export class SendOtpUseCase {
     constructor(
         private readonly otpProvider: OtpProvider,
-        private readonly usersRepository: UsersRepository,
-        private readonly auditLogService: AuditLogService
+        private readonly usersRepository: UsersRepository
     ) {}
 
-    async execute(dto: SendOtpDTO, context?: AuditContext): Promise<SendOtpResult> {
+    async execute(dto: SendOtpDTO, _context?: AuditContext): Promise<SendOtpResult> {
         const email = dto.email.trim().toLowerCase();
 
         // Check if user exists and is active
@@ -31,20 +29,6 @@ export class SendOtpUseCase {
 
         const type = dto.type || "PASSWORD_RESET";
         const result = await this.otpProvider.sendOtp(email, type);
-
-        // Audit log
-        await this.auditLogService.record({
-            userId: user.id,
-            action: 'UPDATE',
-            resource: 'auth',
-            resourceId: user.id,
-            context,
-            details: {
-                action: "otp_sent",
-                type,
-                email: email.replace(/(.{2})(.*)(@.*)/, "$1***$3"), // Sanitized in logs
-            }
-        });
 
         return result;
     }

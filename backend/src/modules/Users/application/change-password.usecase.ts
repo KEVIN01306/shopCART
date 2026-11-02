@@ -1,8 +1,7 @@
 import type { UsersRepository } from "../domain/users.repository.js";
 import type { HashProvider } from "@shared/domain/hash.provider.js";
 import AppError from "@shared/errors/AppError.js";
-import type { AuditLogService } from "../../Audit/application/audit-log.service.js";
-import type { AuditContext } from "../../Audit/domain/audit-log.entity.js";
+import type { AuditContext } from "@presentation/base.controller.js";
 
 interface ChangePasswordRequest {
     currentPassword: string;
@@ -13,11 +12,10 @@ interface ChangePasswordRequest {
 export class ChangePasswordUseCase {
     constructor(
         private readonly usersRepository: UsersRepository,
-        private readonly hashProvider: HashProvider,
-        private readonly auditLogService: AuditLogService
+        private readonly hashProvider: HashProvider
     ) {}
 
-    async execute(userId: string, data: ChangePasswordRequest, context?: AuditContext): Promise<void> {
+    async execute(userId: string, data: ChangePasswordRequest, _context?: AuditContext): Promise<void> {
         try {
             const user = await this.usersRepository.findByIdWithPassword(userId);
             if (!user) {
@@ -43,19 +41,6 @@ export class ChangePasswordUseCase {
 
             const newPasswordHash = await this.hashProvider.hash(data.newPassword);
             await this.usersRepository.updatePassword(userId, newPasswordHash);
-
-            // Record audit log - NEVER store plain passwords, new passwords, or hashes!
-            await this.auditLogService.record({
-                userId,
-                action: 'UPDATE',
-                resource: 'user',
-                resourceId: userId,
-                context,
-                details: {
-                    action: "change_password",
-                    description: "Usuario cambió su contraseña."
-                }
-            });
         } catch (error) {
             if (error instanceof AppError) {
                 throw error;

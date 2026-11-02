@@ -1,8 +1,7 @@
 import type { OtpProvider } from "../domain/otp.provider.js";
 import type JwtProvider from "../domain/jwt.provider.js";
 import type { UsersRepository } from "../../Users/domain/users.repository.js";
-import type { AuditLogService } from "../../Audit/application/audit-log.service.js";
-import type { AuditContext } from "../../Audit/domain/audit-log.entity.js";
+import type { AuditContext } from "@presentation/base.controller.js";
 import AppError from "@shared/errors/AppError.js";
 
 export interface VerifyOtpDTO {
@@ -22,11 +21,10 @@ export class VerifyOtpUseCase {
     constructor(
         private readonly otpProvider: OtpProvider,
         private readonly jwtProvider: JwtProvider,
-        private readonly usersRepository: UsersRepository,
-        private readonly auditLogService: AuditLogService
+        private readonly usersRepository: UsersRepository
     ) {}
 
-    async execute(dto: VerifyOtpDTO, context?: AuditContext): Promise<VerifyOtpResponse> {
+    async execute(dto: VerifyOtpDTO, _context?: AuditContext): Promise<VerifyOtpResponse> {
         const email = dto.email.trim().toLowerCase();
         const code = dto.code.trim();
         const type = dto.type || "PASSWORD_RESET";
@@ -47,19 +45,6 @@ export class VerifyOtpUseCase {
 
         // Generate temporary single-use reset token bound to this user/email
         const resetToken = await this.jwtProvider.generateResetToken(user.id, email);
-
-        await this.auditLogService.record({
-            userId: user.id,
-            action: 'UPDATE',
-            resource: 'auth',
-            resourceId: user.id,
-            context,
-            details: {
-                action: "otp_verified",
-                type,
-                email: email.replace(/(.{2})(.*)(@.*)/, "$1***$3"),
-            }
-        });
 
         return {
             success: true,
