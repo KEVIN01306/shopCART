@@ -1,0 +1,130 @@
+export type VariantAttributes = Record<string, string>;
+
+export type KardexMovementType = "ENTRADA" | "SALIDA" | "AJUSTE";
+
+export interface Category {
+    id: string;
+    name: string;
+    description: string | null;
+    isActive: boolean;
+    productCount: number;
+    createdAt: Date;
+}
+
+export interface CreateCategory {
+    id?: string;
+    name: string;
+    description?: string | null;
+}
+
+export interface UpdateCategory {
+    name?: string;
+    description?: string | null;
+    isActive?: boolean;
+}
+
+export interface ProductVariant {
+    id: string;
+    productId: string;
+    sku: string;
+    attributes: VariantAttributes;
+    price: number;
+    stockPhysical: number;
+    stockReserved: number;
+    stockAvailable: number;
+    isActive: boolean;
+    createdAt?: Date;
+    updatedAt?: Date;
+}
+
+export interface CreateProductVariantInput {
+    id?: string;
+    sku: string;
+    attributes?: VariantAttributes | null;
+    price: number;
+    stockPhysical?: number;
+    userId?: string | null;
+}
+
+export interface UpdateProductVariantInput {
+    id?: string;
+    sku?: string;
+    attributes?: VariantAttributes | null;
+    price?: number;
+    isActive?: boolean;
+    userId?: string | null;
+}
+
+export interface AdjustVariantStockInput {
+    variantId: string;
+    movementType: KardexMovementType;
+    quantity: number;
+    reason: string;
+    userId?: string | null;
+}
+
+export interface Product {
+    id: string;
+    categoryId: string;
+    categoryName: string;
+    name: string;
+    description: string | null;
+    mainImageUrl: string | null;
+    isActive: boolean;
+    minPrice: number;
+    maxPrice: number;
+    totalStockPhysical: number;
+    totalStockReserved: number;
+    totalStockAvailable: number;
+    variantsCount: number;
+    defaultVariantId?: string | null;
+    defaultVariantSku?: string | null;
+    defaultVariantAttributes?: VariantAttributes;
+    variants: ProductVariant[];
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface CreateProductInput {
+    id?: string;
+    categoryId: string;
+    name: string;
+    description?: string | null;
+    mainImageUrl?: string | null;
+    variants?: CreateProductVariantInput[];
+    userId?: string | null;
+}
+
+export interface UpdateProductInput {
+    categoryId?: string;
+    name?: string;
+    description?: string | null;
+    mainImageUrl?: string | null;
+    isActive?: boolean;
+    variants?: Array<
+        UpdateProductVariantInput & {
+            id?: string;
+            sku: string;
+            price: number;
+            stockPhysical?: number;
+        }
+    >;
+    userId?: string | null;
+}
+
+export interface CatalogFilterOptions {
+    page?: number;
+    limit?: number;
+    q?: string;
+    categoryId?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    sortBy?: "latest" | "price_asc" | "price_desc" | "name_asc";
+}
+
+export interface AdminProductsFilterOptions {
+    page?: number;
+    limit?: number;
+    q?: string;
+    categoryId?: string;
+}
