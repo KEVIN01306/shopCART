@@ -37,8 +37,6 @@ Crea el archivo `backend/.env` basándote en `backend/env.example`:
 Crea el archivo `frontend/.env` basándote en `frontend/env.example`:
 Las variables de entorno de los example son las mismas que se deben usar, solo copiarlas en el `.env` del backend y frontend
 
-Las **OTP_PROVIDER** y **OTP_URL** son keys reales de un servicio externo llamado **send-otp** este servicio lo desplegue para esto en especifico: usarlo sin problemas.
-
 ```env
 PORT=5600
 FRONTEND_URL=http://localhost:5601
@@ -58,10 +56,6 @@ JWT_ISS=shop-cart-backend
 JWT_AUD=shop-cart-frontend
 JWT_ACCESS_TTL=15m
 JWT_REFRESH_TTL=7d
-
-# Proveedores de Servicio (Email & OTP)
-OTP_PROVIDER=auth_live_f55512036f70814ead9ad7a2311e3d7769330dd9333b1707
-OTP_URL=https://send-otp-shopcart.onrender.com/api/v1/
 
 # Seed Inicial
 SEED_ADMIN_EMAIL=kevin01306@gmail.com
