@@ -56,7 +56,8 @@ export class CreateUserUseCase {
             const role = data.role || data.roles?.[0] || "Cliente";
             const roles = data.roles && data.roles.length > 0 ? data.roles : [role];
 
-            // User starts unverified (isVerify = false)
+            // Como el servicio OTP está temporalmente deshabilitado, los usuarios
+            // creados por el Administrador nacen verificados (isVerify = true) para poder ingresar de inmediato
             const user = await this.usersRepository.create({
                 email: data.email,
                 passwordHash,
@@ -65,7 +66,7 @@ export class CreateUserUseCase {
                 avatarUrl: data.avatarUrl ?? null,
                 role,
                 roles,
-                isVerify: false,
+                isVerify: true,
             });
 
             // Send credentials email via OTP / Email microservice
@@ -78,7 +79,7 @@ export class CreateUserUseCase {
 
             return {
                 ...user,
-                isVerify: false,
+                isVerify: true,
                 emailSent: emailResult.success,
                 generatedPassword: data.autoGeneratePassword ? rawPassword : undefined,
             };

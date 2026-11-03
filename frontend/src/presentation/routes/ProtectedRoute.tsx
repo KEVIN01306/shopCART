@@ -57,15 +57,16 @@ const ProtectedRoute = () => {
         );
     }
 
-    if (user && user.isVerify === false) {
-        return (
-            <Navigate
-                to="/auth/verify-account"
-                replace
-                state={{ from: location }}
-            />
-        );
-    }
+    // Nota: El flujo de verificación obligatoria por OTP está temporalmente deshabilitado
+    // if (user && user.isVerify === false) {
+    //     return (
+    //         <Navigate
+    //             to="/auth/verify-account"
+    //             replace
+    //             state={{ from: location }}
+    //         />
+    //     );
+    // }
 
     return <Outlet />;
 };

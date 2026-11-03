@@ -32,11 +32,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
             const response = await loginUser(values);
             setAuth(response.accessToken, response.user);
             try { await syncCartOnAuth(); } catch (err) { console.warn(err); }
-            if (response.user.isVerify === false) {
-                navigate('/auth/verify-account', { replace: true });
-            } else {
-                navigate(from, { replace: true });
-            }
+            navigate(from, { replace: true });
         } catch (err: any) {
             setServerError(err?.response?.data?.message || 'Credenciales inválidas. Verifica tu correo y contraseña.');
         }
