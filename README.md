@@ -226,9 +226,6 @@ flowchart TD
 | `POST` | `/api/auth/refresh` | Público (Cookie) | Rotación de sesión y emisión de un nuevo `accessToken`. |
 | `POST` | `/api/auth/logout` | Autenticado | Cierre de sesión, eliminación de sesión en base de datos y borrado de cookie. |
 | `GET` | `/api/auth/me` | Autenticado | Obtiene el perfil del usuario autenticado. |
-| `POST` | `/api/auth/otp/send` | Público | Envía código OTP para recuperación de contraseña. |
-| `POST` | `/api/auth/otp/verify` | Público | Valida código OTP y emite un `resetToken` temporal de un solo uso. |
-| `POST` | `/api/auth/reset-password` | Público (`resetToken`) | Restablece la contraseña con hash Argon2. |
 
 ### Módulo de Usuarios (`/api/users`)
 | Método | Ruta | Acceso | Descripción |

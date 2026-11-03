@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -11,7 +11,7 @@ import {
     Tooltip,
     Alert,
     Snackbar,
-    Button,
+    // Button,
 } from '@mui/material';
 import {
     PersonOutlineOutlined,
@@ -25,7 +25,7 @@ import {
     MenuBookOutlined,
     FingerprintOutlined,
     Check,
-    LockResetOutlined,
+    // LockResetOutlined,
 } from '@mui/icons-material';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { getCurrentUser } from '../../../auth/infrastructure/services/auth.service';
@@ -136,7 +136,7 @@ const SelineProfileCard: React.FC<{
 );
 
 export const ProfilePage: React.FC = () => {
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
     const { user: cachedUser, accessToken, setUser } = useAuthStore();
     const [profile, setProfile] = useState<AuthUser | null>(cachedUser);
     const [loading, setLoading] = useState(false);
@@ -442,7 +442,8 @@ export const ProfilePage: React.FC = () => {
                         />
                     }
                 />
-                <ProfileRow
+                {/* Botón de cambio/recuperación de contraseña deshabilitado temporalmente */}
+                {/* <ProfileRow
                     icon={<LockResetOutlined />}
                     label="Contraseña de Acceso"
                     value={
@@ -471,7 +472,7 @@ export const ProfilePage: React.FC = () => {
                             Cambiar contraseña
                         </Button>
                     }
-                />
+                /> */}
                 <ProfileRow
                     icon={<CalendarMonthOutlined />}
                     label="Miembro Desde"

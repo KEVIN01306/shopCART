@@ -35,20 +35,20 @@ router.get('/me',
     authController.getProfile
 );
 
-// ── Password Reset via OTP routes ───────────────────────────────────────────
-router.post('/otp/send',
-    validatedMiddleware.validateBody(SendOtpSchema),
-    authController.sendOtp
-);
-
-router.post('/otp/verify',
-    validatedMiddleware.validateBody(VerifyOtpSchema),
-    authController.verifyOtp
-);
-
-router.post('/reset-password',
-    validatedMiddleware.validateBody(ResetPasswordSchema),
-    authController.resetPassword
-);
+// ── Password Reset via OTP routes (Deshabilitado temporalmente por requerimiento) ──
+// router.post('/otp/send',
+//     validatedMiddleware.validateBody(SendOtpSchema),
+//     authController.sendOtp
+// );
+// 
+// router.post('/otp/verify',
+//     validatedMiddleware.validateBody(VerifyOtpSchema),
+//     authController.verifyOtp
+// );
+// 
+// router.post('/reset-password',
+//     validatedMiddleware.validateBody(ResetPasswordSchema),
+//     authController.resetPassword
+// );
 
 export default router;
