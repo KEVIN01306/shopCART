@@ -1,6 +1,7 @@
 -- =============================================================================
 -- STORED PROCEDURES: AUTH Y USUARIOS (ShopCart)
 -- Convención obligatoria: SP_Modulo_Proceso
+-- Tablas: Users, UserSessions (Esquema PascalCase estandarizado)
 -- =============================================================================
 
 -- 1. Obtener usuario activo por email (Autenticación)
@@ -11,20 +12,20 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT
-        id,
-        email,
-        password_hash,
-        first_name,
-        last_name,
-        avatar_url,
-        role,
-        is_active,
-        is_verify,
-        created_at,
-        updated_at
-    FROM users
-    WHERE email = @p_email
-      AND is_active = 1;
+        IDUser AS id,
+        Email AS email,
+        PasswordHash AS password_hash,
+        FirstName AS first_name,
+        LastName AS last_name,
+        AvatarURL AS avatar_url,
+        Role AS role,
+        IsActive AS is_active,
+        IsVerify AS is_verify,
+        CreatedAt AS created_at,
+        UpdatedAt AS updated_at
+    FROM Users
+    WHERE Email = @p_email
+      AND IsActive = 1;
 END;
 GO
 
@@ -36,55 +37,77 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT
-        id,
-        email,
-        password_hash,
-        first_name,
-        last_name,
-        avatar_url,
-        role,
-        is_active,
-        is_verify,
-        created_at,
-        updated_at
-    FROM users
-    WHERE id = @p_id
-      AND is_active = 1;
+        IDUser AS id,
+        Email AS email,
+        PasswordHash AS password_hash,
+        FirstName AS first_name,
+        LastName AS last_name,
+        AvatarURL AS avatar_url,
+        Role AS role,
+        IsActive AS is_active,
+        IsVerify AS is_verify,
+        CreatedAt AS created_at,
+        UpdatedAt AS updated_at
+    FROM Users
+    WHERE IDUser = @p_id
+      AND IsActive = 1;
 END;
 GO
 
--- 3. Crear o actualizar sesión de usuario (Refresh Token con rotación)
+-- 3. Crear o actualizar sesión de usuario (Refresh Token con rotación y familia)
 CREATE OR ALTER PROCEDURE SP_Auth_UpsertSesion
     @p_id VARCHAR(36),
     @p_user_id VARCHAR(36),
     @p_token VARCHAR(500),
-    @p_expires_at DATETIME2
+    @p_expires_at DATETIME2,
+    @p_family VARCHAR(36) = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF EXISTS (SELECT 1 FROM user_sessions WHERE user_id = @p_user_id)
+    IF EXISTS (SELECT 1 FROM UserSessions WHERE IDUser = @p_user_id)
     BEGIN
-        UPDATE user_sessions
-        SET token = @p_token,
-            expires_at = @p_expires_at,
-            created_at = GETDATE()
-        WHERE user_id = @p_user_id;
+        UPDATE UserSessions
+        SET RefreshToken = @p_token,
+            Family = COALESCE(@p_family, Family, @p_id),
+            IsRevoked = 0,
+            ExpiresAt = @p_expires_at,
+            CreatedAt = GETDATE()
+        WHERE IDUser = @p_user_id;
     END
     ELSE
     BEGIN
-        INSERT INTO user_sessions (id, user_id, token, expires_at, created_at)
-        VALUES (@p_id, @p_user_id, @p_token, @p_expires_at, GETDATE());
+        INSERT INTO UserSessions (
+            IDSession,
+            IDUser,
+            RefreshToken,
+            Family,
+            IsRevoked,
+            ExpiresAt,
+            CreatedAt
+        )
+        VALUES (
+            @p_id,
+            @p_user_id,
+            @p_token,
+            COALESCE(@p_family, @p_id),
+            0,
+            @p_expires_at,
+            GETDATE()
+        );
     END
 
     SELECT
-        id,
-        user_id,
-        token,
-        expires_at,
-        created_at
-    FROM user_sessions
-    WHERE user_id = @p_user_id;
+        IDSession AS id,
+        IDUser AS user_id,
+        RefreshToken AS token,
+        Family AS family,
+        IsRevoked AS is_revoked,
+        ExpiresAt AS expires_at,
+        CreatedAt AS created_at
+    FROM UserSessions
+    WHERE IDUser = @p_user_id
+      AND IsRevoked = 0;
 END;
 GO
 
@@ -96,13 +119,16 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT
-        id,
-        user_id,
-        token,
-        expires_at,
-        created_at
-    FROM user_sessions
-    WHERE token = @p_token;
+        IDSession AS id,
+        IDUser AS user_id,
+        RefreshToken AS token,
+        Family AS family,
+        IsRevoked AS is_revoked,
+        ExpiresAt AS expires_at,
+        CreatedAt AS created_at
+    FROM UserSessions
+    WHERE RefreshToken = @p_token
+      AND IsRevoked = 0;
 END;
 GO
 
@@ -114,13 +140,16 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT
-        id,
-        user_id,
-        token,
-        expires_at,
-        created_at
-    FROM user_sessions
-    WHERE user_id = @p_user_id;
+        IDSession AS id,
+        IDUser AS user_id,
+        RefreshToken AS token,
+        Family AS family,
+        IsRevoked AS is_revoked,
+        ExpiresAt AS expires_at,
+        CreatedAt AS created_at
+    FROM UserSessions
+    WHERE IDUser = @p_user_id
+      AND IsRevoked = 0;
 END;
 GO
 
@@ -131,8 +160,8 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DELETE FROM user_sessions
-    WHERE user_id = @p_user_id;
+    DELETE FROM UserSessions
+    WHERE IDUser = @p_user_id;
 END;
 GO
 
@@ -150,18 +179,18 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    INSERT INTO users (
-        id,
-        email,
-        password_hash,
-        first_name,
-        last_name,
-        avatar_url,
-        role,
-        is_active,
-        is_verify,
-        created_at,
-        updated_at
+    INSERT INTO Users (
+        IDUser,
+        Email,
+        PasswordHash,
+        FirstName,
+        LastName,
+        AvatarURL,
+        Role,
+        IsActive,
+        IsVerify,
+        CreatedAt,
+        UpdatedAt
     )
     VALUES (
         @p_id,
@@ -178,19 +207,19 @@ BEGIN
     );
 
     SELECT
-        id,
-        email,
-        password_hash,
-        first_name,
-        last_name,
-        avatar_url,
-        role,
-        is_active,
-        is_verify,
-        created_at,
-        updated_at
-    FROM users
-    WHERE id = @p_id;
+        IDUser AS id,
+        Email AS email,
+        PasswordHash AS password_hash,
+        FirstName AS first_name,
+        LastName AS last_name,
+        AvatarURL AS avatar_url,
+        Role AS role,
+        IsActive AS is_active,
+        IsVerify AS is_verify,
+        CreatedAt AS created_at,
+        UpdatedAt AS updated_at
+    FROM Users
+    WHERE IDUser = @p_id;
 END;
 GO
 
@@ -207,35 +236,35 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM users WHERE id = @p_id)
+    IF NOT EXISTS (SELECT 1 FROM Users WHERE IDUser = @p_id)
     BEGIN
         THROW 50001, 'NO_ENCONTRADO: El usuario no existe.', 1;
     END
 
-    UPDATE users
-    SET email = COALESCE(@p_email, email),
-        password_hash = COALESCE(@p_password_hash, password_hash),
-        first_name = COALESCE(@p_first_name, first_name),
-        last_name = COALESCE(@p_last_name, last_name),
-        avatar_url = CASE WHEN @p_avatar_url IS NOT NULL THEN @p_avatar_url ELSE avatar_url END,
-        role = COALESCE(@p_role, role),
-        updated_at = GETDATE()
-    WHERE id = @p_id;
+    UPDATE Users
+    SET Email = COALESCE(@p_email, Email),
+        PasswordHash = COALESCE(@p_password_hash, PasswordHash),
+        FirstName = COALESCE(@p_first_name, FirstName),
+        LastName = COALESCE(@p_last_name, LastName),
+        AvatarURL = CASE WHEN @p_avatar_url IS NOT NULL THEN @p_avatar_url ELSE AvatarURL END,
+        Role = COALESCE(@p_role, Role),
+        UpdatedAt = GETDATE()
+    WHERE IDUser = @p_id;
 
     SELECT
-        id,
-        email,
-        password_hash,
-        first_name,
-        last_name,
-        avatar_url,
-        role,
-        is_active,
-        is_verify,
-        created_at,
-        updated_at
-    FROM users
-    WHERE id = @p_id;
+        IDUser AS id,
+        Email AS email,
+        PasswordHash AS password_hash,
+        FirstName AS first_name,
+        LastName AS last_name,
+        AvatarURL AS avatar_url,
+        Role AS role,
+        IsActive AS is_active,
+        IsVerify AS is_verify,
+        CreatedAt AS created_at,
+        UpdatedAt AS updated_at
+    FROM Users
+    WHERE IDUser = @p_id;
 END;
 GO
 
@@ -247,19 +276,19 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT
-        id,
-        email,
-        password_hash,
-        first_name,
-        last_name,
-        avatar_url,
-        role,
-        is_active,
-        is_verify,
-        created_at,
-        updated_at
-    FROM users
-    WHERE id = @p_id;
+        IDUser AS id,
+        Email AS email,
+        PasswordHash AS password_hash,
+        FirstName AS first_name,
+        LastName AS last_name,
+        AvatarURL AS avatar_url,
+        Role AS role,
+        IsActive AS is_active,
+        IsVerify AS is_verify,
+        CreatedAt AS created_at,
+        UpdatedAt AS updated_at
+    FROM Users
+    WHERE IDUser = @p_id;
 END;
 GO
 
@@ -271,19 +300,19 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT
-        id,
-        email,
-        password_hash,
-        first_name,
-        last_name,
-        avatar_url,
-        role,
-        is_active,
-        is_verify,
-        created_at,
-        updated_at
-    FROM users
-    WHERE email = @p_email;
+        IDUser AS id,
+        Email AS email,
+        PasswordHash AS password_hash,
+        FirstName AS first_name,
+        LastName AS last_name,
+        AvatarURL AS avatar_url,
+        Role AS role,
+        IsActive AS is_active,
+        IsVerify AS is_verify,
+        CreatedAt AS created_at,
+        UpdatedAt AS updated_at
+    FROM Users
+    WHERE Email = @p_email;
 END;
 GO
 
@@ -310,36 +339,36 @@ BEGIN
 
     -- Primer resultset: Filas paginadas + total_count por ventana
     SELECT
-        id,
-        email,
-        password_hash,
-        first_name,
-        last_name,
-        avatar_url,
-        role,
-        is_active,
-        is_verify,
-        created_at,
-        updated_at,
+        IDUser AS id,
+        Email AS email,
+        PasswordHash AS password_hash,
+        FirstName AS first_name,
+        LastName AS last_name,
+        AvatarURL AS avatar_url,
+        Role AS role,
+        IsActive AS is_active,
+        IsVerify AS is_verify,
+        CreatedAt AS created_at,
+        UpdatedAt AS updated_at,
         COUNT(*) OVER() AS total_count
-    FROM users
+    FROM Users
     WHERE (@v_search IS NULL
-        OR email LIKE @v_search
-        OR first_name LIKE @v_search
-        OR last_name LIKE @v_search
-        OR role LIKE @v_search)
-    ORDER BY created_at DESC
+        OR Email LIKE @v_search
+        OR FirstName LIKE @v_search
+        OR LastName LIKE @v_search
+        OR Role LIKE @v_search)
+    ORDER BY CreatedAt DESC
     OFFSET @v_offset ROWS
     FETCH NEXT @p_limit ROWS ONLY;
 
     -- Segundo resultset: Total global para clientes que leen recordsets[1]
     SELECT COUNT(*) AS total
-    FROM users
+    FROM Users
     WHERE (@v_search IS NULL
-        OR email LIKE @v_search
-        OR first_name LIKE @v_search
-        OR last_name LIKE @v_search
-        OR role LIKE @v_search);
+        OR Email LIKE @v_search
+        OR FirstName LIKE @v_search
+        OR LastName LIKE @v_search
+        OR Role LIKE @v_search);
 END;
 GO
 
@@ -351,30 +380,30 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM users WHERE id = @p_id)
+    IF NOT EXISTS (SELECT 1 FROM Users WHERE IDUser = @p_id)
     BEGIN
         THROW 50001, 'NO_ENCONTRADO: El usuario no existe.', 1;
     END
 
-    UPDATE users
-    SET is_active = @p_is_active,
-        updated_at = GETDATE()
-    WHERE id = @p_id;
+    UPDATE Users
+    SET IsActive = @p_is_active,
+        UpdatedAt = GETDATE()
+    WHERE IDUser = @p_id;
 
     SELECT
-        id,
-        email,
-        password_hash,
-        first_name,
-        last_name,
-        avatar_url,
-        role,
-        is_active,
-        is_verify,
-        created_at,
-        updated_at
-    FROM users
-    WHERE id = @p_id;
+        IDUser AS id,
+        Email AS email,
+        PasswordHash AS password_hash,
+        FirstName AS first_name,
+        LastName AS last_name,
+        AvatarURL AS avatar_url,
+        Role AS role,
+        IsActive AS is_active,
+        IsVerify AS is_verify,
+        CreatedAt AS created_at,
+        UpdatedAt AS updated_at
+    FROM Users
+    WHERE IDUser = @p_id;
 END;
 GO
 
@@ -386,15 +415,15 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM users WHERE id = @p_id)
+    IF NOT EXISTS (SELECT 1 FROM Users WHERE IDUser = @p_id)
     BEGIN
         THROW 50001, 'NO_ENCONTRADO: El usuario no existe.', 1;
     END
 
-    UPDATE users
-    SET password_hash = @p_password_hash,
-        updated_at = GETDATE()
-    WHERE id = @p_id;
+    UPDATE Users
+    SET PasswordHash = @p_password_hash,
+        UpdatedAt = GETDATE()
+    WHERE IDUser = @p_id;
 END;
 GO
 
@@ -406,15 +435,14 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM users WHERE id = @p_id)
+    IF NOT EXISTS (SELECT 1 FROM Users WHERE IDUser = @p_id)
     BEGIN
         THROW 50001, 'NO_ENCONTRADO: El usuario no existe.', 1;
     END
 
-    UPDATE users
-    SET is_verify = @p_is_verify,
-        updated_at = GETDATE()
-    WHERE id = @p_id;
+    UPDATE Users
+    SET IsVerify = @p_is_verify,
+        UpdatedAt = GETDATE()
+    WHERE IDUser = @p_id;
 END;
 GO
-

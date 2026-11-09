@@ -1,5 +1,11 @@
+-- =============================================================================
+-- STORED PROCEDURES: RESERVAS DE INVENTARIO Y CONFIGURACIÓN DEL SISTEMA (ShopCart)
+-- Convención obligatoria: SP_Modulo_Proceso
+-- Tablas: ProductVariants, StockReservations, SystemSettings
+-- =============================================================================
+
 -- 1. SP para crear reserva de stock atómica (Checkout con prevención de sobreventa)
-CREATE PROCEDURE SP_Inventario_ReservarExistencia
+CREATE OR ALTER PROCEDURE SP_Inventario_ReservarExistencia
     @p_cart_id VARCHAR(36),
     @p_variant_id VARCHAR(36),
     @p_quantity INT,
@@ -12,19 +18,35 @@ BEGIN
     DECLARE @available_stock INT;
 
     -- Bloqueo de fila para evitar concurrencia y sobreventa
-    SELECT @available_stock = (stock_physical - stock_reserved)
-    FROM product_variants WITH (UPDLOCK, ROWLOCK)
-    WHERE id = @p_variant_id;
+    SELECT @available_stock = (StockPhysical - StockReserved)
+    FROM ProductVariants WITH (UPDLOCK, ROWLOCK)
+    WHERE IDVariant = @p_variant_id;
 
     IF @available_stock >= @p_quantity
     BEGIN
-        UPDATE product_variants
-        SET stock_reserved = stock_reserved + @p_quantity,
-            updated_at = GETDATE()
-        WHERE id = @p_variant_id;
+        UPDATE ProductVariants
+        SET StockReserved = StockReserved + @p_quantity,
+            UpdatedAt = GETDATE()
+        WHERE IDVariant = @p_variant_id;
 
-        INSERT INTO stock_reservations (id, variant_id, cart_id, quantity, expires_at)
-        VALUES (@p_reservation_id, @p_variant_id, @p_cart_id, @p_quantity, DATEADD(MINUTE, 15, GETDATE()));
+        INSERT INTO StockReservations (
+            IDReservation,
+            IDVariant,
+            IDCart,
+            Quantity,
+            ExpiresAt,
+            IsReleased,
+            CreatedAt
+        )
+        VALUES (
+            @p_reservation_id,
+            @p_variant_id,
+            @p_cart_id,
+            @p_quantity,
+            DATEADD(MINUTE, 15, GETDATE()),
+            0,
+            GETDATE()
+        );
 
         COMMIT TRANSACTION;
         SELECT 1 AS success, 'Reserva creada con éxito' AS message;
@@ -38,7 +60,7 @@ END;
 GO
 
 -- 2. SP para liberar reservas expiradas automáticamente
-CREATE PROCEDURE SP_Inventario_LiberarReservasVencidas
+CREATE OR ALTER PROCEDURE SP_Inventario_LiberarReservasVencidas
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -46,17 +68,61 @@ BEGIN
 
     -- Devolver stock reservado
     UPDATE pv
-    SET pv.stock_reserved = pv.stock_reserved - sr.quantity,
-        pv.updated_at = GETDATE()
-    FROM product_variants pv
-    INNER JOIN stock_reservations sr ON pv.id = sr.variant_id
-    WHERE sr.expires_at < GETDATE() AND sr.is_released = 0;
+    SET pv.StockReserved = pv.StockReserved - sr.Quantity,
+        pv.UpdatedAt = GETDATE()
+    FROM ProductVariants pv
+    INNER JOIN StockReservations sr ON pv.IDVariant = sr.IDVariant
+    WHERE sr.ExpiresAt < GETDATE() AND sr.IsReleased = 0;
 
     -- Marcar como liberadas
-    UPDATE stock_reservations
-    SET is_released = 1
-    WHERE expires_at < GETDATE() AND is_released = 0;
+    UPDATE StockReservations
+    SET IsReleased = 1
+    WHERE ExpiresAt < GETDATE() AND IsReleased = 0;
 
     COMMIT TRANSACTION;
+END;
+GO
+
+-- 3. SP para insertar o actualizar parámetro en SystemSettings (Configuración del sistema)
+CREATE OR ALTER PROCEDURE SP_Configuracion_UpsertParametro
+    @p_key_name VARCHAR(50),
+    @p_key_value VARCHAR(255),
+    @p_description VARCHAR(255) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (SELECT 1 FROM SystemSettings WHERE KeyName = @p_key_name)
+    BEGIN
+        UPDATE SystemSettings
+        SET KeyValue = @p_key_value,
+            Description = COALESCE(@p_description, Description),
+            UpdatedAt = GETDATE()
+        WHERE KeyName = @p_key_name;
+    END
+    ELSE
+    BEGIN
+        INSERT INTO SystemSettings (
+            KeyName,
+            KeyValue,
+            Description,
+            UpdatedAt
+        )
+        VALUES (
+            @p_key_name,
+            @p_key_value,
+            @p_description,
+            GETDATE()
+        );
+    END
+
+    SELECT
+        IDSetting AS id,
+        KeyName AS key_name,
+        KeyValue AS key_value,
+        Description AS description,
+        UpdatedAt AS updated_at
+    FROM SystemSettings
+    WHERE KeyName = @p_key_name;
 END;
 GO

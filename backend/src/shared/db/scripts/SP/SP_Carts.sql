@@ -2,6 +2,7 @@
 -- STORED PROCEDURES: MÓDULO CARRITOS (ShopCart)
 -- Convención obligatoria: SP_Modulo_Proceso
 -- Tipos numéricos: DECIMAL(12, 2) e INT (Prohibido FLOAT o REAL)
+-- Tablas: Carts, CartItems, ProductVariants, Products, ProductImages, Categories
 -- =============================================================================
 
 -- 1. Obtener o crear carrito (por usuario autenticado o token de invitado)
@@ -16,27 +17,27 @@ BEGIN
 
     IF @p_user_id IS NOT NULL
     BEGIN
-        SELECT @v_cart_id = id
-        FROM carts
-        WHERE user_id = @p_user_id;
+        SELECT @v_cart_id = IDCart
+        FROM Carts
+        WHERE IDUser = @p_user_id;
 
         IF @v_cart_id IS NULL
         BEGIN
             SET @v_cart_id = CAST(NEWID() AS VARCHAR(36));
-            INSERT INTO carts (id, user_id, guest_token, created_at, updated_at)
+            INSERT INTO Carts (IDCart, IDUser, GuestToken, CreatedAt, UpdatedAt)
             VALUES (@v_cart_id, @p_user_id, NULL, GETDATE(), GETDATE());
         END
     END
     ELSE IF @p_guest_token IS NOT NULL
     BEGIN
-        SELECT @v_cart_id = id
-        FROM carts
-        WHERE guest_token = @p_guest_token;
+        SELECT @v_cart_id = IDCart
+        FROM Carts
+        WHERE GuestToken = @p_guest_token;
 
         IF @v_cart_id IS NULL
         BEGIN
             SET @v_cart_id = CAST(NEWID() AS VARCHAR(36));
-            INSERT INTO carts (id, user_id, guest_token, created_at, updated_at)
+            INSERT INTO Carts (IDCart, IDUser, GuestToken, CreatedAt, UpdatedAt)
             VALUES (@v_cart_id, NULL, @p_guest_token, GETDATE(), GETDATE());
         END
     END
@@ -46,13 +47,13 @@ BEGIN
     END
 
     SELECT
-        id,
-        user_id,
-        guest_token,
-        created_at,
-        updated_at
-    FROM carts
-    WHERE id = @v_cart_id;
+        IDCart AS id,
+        IDUser AS user_id,
+        GuestToken AS guest_token,
+        CreatedAt AS created_at,
+        UpdatedAt AS updated_at
+    FROM Carts
+    WHERE IDCart = @v_cart_id;
 END;
 GO
 
@@ -64,28 +65,34 @@ BEGIN
     SET NOCOUNT ON;
 
     SELECT
-        ci.id AS item_id,
-        ci.cart_id,
-        ci.variant_id,
-        ci.quantity,
-        ci.created_at,
-        ci.updated_at,
-        v.sku,
-        v.attributes,
-        v.price,
-        v.stock_physical,
-        v.stock_reserved,
-        (v.stock_physical - v.stock_reserved) AS stock_available,
-        p.id AS product_id,
-        p.name AS product_name,
-        p.main_image_url,
-        c.name AS category_name
-    FROM cart_items ci
-    INNER JOIN product_variants v ON ci.variant_id = v.id
-    INNER JOIN products p ON v.product_id = p.id
-    INNER JOIN categories c ON p.category_id = c.id
-    WHERE ci.cart_id = @p_cart_id
-    ORDER BY ci.created_at ASC;
+        ci.IDCartItem AS item_id,
+        ci.IDCart AS cart_id,
+        ci.IDVariant AS variant_id,
+        ci.Quantity AS quantity,
+        ci.CreatedAt AS created_at,
+        ci.UpdatedAt AS updated_at,
+        v.SKU AS sku,
+        v.Attributes AS attributes,
+        v.Price AS price,
+        v.StockPhysical AS stock_physical,
+        v.StockReserved AS stock_reserved,
+        (v.StockPhysical - v.StockReserved) AS stock_available,
+        p.IDProduct AS product_id,
+        p.Name AS product_name,
+        coverImg.ImageURL AS main_image_url,
+        c.Name AS category_name
+    FROM CartItems ci
+    INNER JOIN ProductVariants v ON ci.IDVariant = v.IDVariant
+    INNER JOIN Products p ON v.IDProduct = p.IDProduct
+    INNER JOIN Categories c ON p.IDCategory = c.IDCategory
+    OUTER APPLY (
+        SELECT TOP 1 pi.ImageURL
+        FROM ProductImages pi
+        WHERE pi.IDProduct = p.IDProduct
+        ORDER BY pi.IsCover DESC, pi.SortOrder ASC, pi.CreatedAt ASC
+    ) coverImg
+    WHERE ci.IDCart = @p_cart_id
+    ORDER BY ci.CreatedAt ASC;
 END;
 GO
 
@@ -103,55 +110,61 @@ BEGIN
         THROW 50000, 'La cantidad debe ser mayor a 0.', 1;
     END
 
-    IF NOT EXISTS (SELECT 1 FROM carts WHERE id = @p_cart_id)
+    IF NOT EXISTS (SELECT 1 FROM Carts WHERE IDCart = @p_cart_id)
     BEGIN
         THROW 50001, 'El carrito no existe.', 1;
     END
 
-    IF NOT EXISTS (SELECT 1 FROM product_variants WHERE id = @p_variant_id AND is_active = 1)
+    IF NOT EXISTS (SELECT 1 FROM ProductVariants WHERE IDVariant = @p_variant_id AND IsActive = 1)
     BEGIN
         THROW 50001, 'La variante de producto no existe o está inactiva.', 1;
     END
 
-    IF EXISTS (SELECT 1 FROM cart_items WHERE cart_id = @p_cart_id AND variant_id = @p_variant_id)
+    IF EXISTS (SELECT 1 FROM CartItems WHERE IDCart = @p_cart_id AND IDVariant = @p_variant_id)
     BEGIN
-        UPDATE cart_items
-        SET quantity = quantity + @p_quantity,
-            updated_at = GETDATE()
-        WHERE cart_id = @p_cart_id AND variant_id = @p_variant_id;
+        UPDATE CartItems
+        SET Quantity = Quantity + @p_quantity,
+            UpdatedAt = GETDATE()
+        WHERE IDCart = @p_cart_id AND IDVariant = @p_variant_id;
     END
     ELSE
     BEGIN
-        INSERT INTO cart_items (id, cart_id, variant_id, quantity, created_at, updated_at)
+        INSERT INTO CartItems (IDCartItem, IDCart, IDVariant, Quantity, CreatedAt, UpdatedAt)
         VALUES (CAST(NEWID() AS VARCHAR(36)), @p_cart_id, @p_variant_id, @p_quantity, GETDATE(), GETDATE());
     END
 
-    UPDATE carts
-    SET updated_at = GETDATE()
-    WHERE id = @p_cart_id;
+    UPDATE Carts
+    SET UpdatedAt = GETDATE()
+    WHERE IDCart = @p_cart_id;
 
     SELECT
-        ci.id AS item_id,
-        ci.cart_id,
-        ci.variant_id,
-        ci.quantity,
-        ci.created_at,
-        ci.updated_at,
-        v.sku,
-        v.attributes,
-        v.price,
-        v.stock_physical,
-        v.stock_reserved,
-        (v.stock_physical - v.stock_reserved) AS stock_available,
-        p.id AS product_id,
-        p.name AS product_name,
-        p.main_image_url,
-        c.name AS category_name
-    FROM cart_items ci
-    INNER JOIN product_variants v ON ci.variant_id = v.id
-    INNER JOIN products p ON v.product_id = p.id
-    INNER JOIN categories c ON p.category_id = c.id
-    WHERE ci.cart_id = @p_cart_id AND ci.variant_id = @p_variant_id;
+        ci.IDCartItem AS item_id,
+        ci.IDCart AS cart_id,
+        ci.IDVariant AS variant_id,
+        ci.Quantity AS quantity,
+        ci.CreatedAt AS created_at,
+        ci.UpdatedAt AS updated_at,
+        v.SKU AS sku,
+        v.Attributes AS attributes,
+        v.Price AS price,
+        v.StockPhysical AS stock_physical,
+        v.StockReserved AS stock_reserved,
+        (v.StockPhysical - v.StockReserved) AS stock_available,
+        p.IDProduct AS product_id,
+        p.Name AS product_name,
+        coverImg.ImageURL AS main_image_url,
+        c.Name AS category_name
+    FROM CartItems ci
+    INNER JOIN ProductVariants v ON ci.IDVariant = v.IDVariant
+    INNER JOIN Products p ON v.IDProduct = p.IDProduct
+    INNER JOIN Categories c ON p.IDCategory = c.IDCategory
+    OUTER APPLY (
+        SELECT TOP 1 pi.ImageURL
+        FROM ProductImages pi
+        WHERE pi.IDProduct = p.IDProduct
+        ORDER BY pi.IsCover DESC, pi.SortOrder ASC, pi.CreatedAt ASC
+    ) coverImg
+    WHERE ci.IDCart = @p_cart_id AND ci.IDVariant = @p_variant_id;
 END;
 GO
 
@@ -164,55 +177,61 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    IF NOT EXISTS (SELECT 1 FROM carts WHERE id = @p_cart_id)
+    IF NOT EXISTS (SELECT 1 FROM Carts WHERE IDCart = @p_cart_id)
     BEGIN
         THROW 50001, 'El carrito no existe.', 1;
     END
 
     IF @p_quantity <= 0
     BEGIN
-        DELETE FROM cart_items
-        WHERE cart_id = @p_cart_id AND variant_id = @p_variant_id;
+        DELETE FROM CartItems
+        WHERE IDCart = @p_cart_id AND IDVariant = @p_variant_id;
     END
     ELSE
     BEGIN
-        IF NOT EXISTS (SELECT 1 FROM cart_items WHERE cart_id = @p_cart_id AND variant_id = @p_variant_id)
+        IF NOT EXISTS (SELECT 1 FROM CartItems WHERE IDCart = @p_cart_id AND IDVariant = @p_variant_id)
         BEGIN
             THROW 50001, 'El item no existe en el carrito.', 1;
         END
 
-        UPDATE cart_items
-        SET quantity = @p_quantity,
-            updated_at = GETDATE()
-        WHERE cart_id = @p_cart_id AND variant_id = @p_variant_id;
+        UPDATE CartItems
+        SET Quantity = @p_quantity,
+            UpdatedAt = GETDATE()
+        WHERE IDCart = @p_cart_id AND IDVariant = @p_variant_id;
     END
 
-    UPDATE carts
-    SET updated_at = GETDATE()
-    WHERE id = @p_cart_id;
+    UPDATE Carts
+    SET UpdatedAt = GETDATE()
+    WHERE IDCart = @p_cart_id;
 
     SELECT
-        ci.id AS item_id,
-        ci.cart_id,
-        ci.variant_id,
-        ci.quantity,
-        ci.created_at,
-        ci.updated_at,
-        v.sku,
-        v.attributes,
-        v.price,
-        v.stock_physical,
-        v.stock_reserved,
-        (v.stock_physical - v.stock_reserved) AS stock_available,
-        p.id AS product_id,
-        p.name AS product_name,
-        p.main_image_url,
-        c.name AS category_name
-    FROM cart_items ci
-    INNER JOIN product_variants v ON ci.variant_id = v.id
-    INNER JOIN products p ON v.product_id = p.id
-    INNER JOIN categories c ON p.category_id = c.id
-    WHERE ci.cart_id = @p_cart_id AND ci.variant_id = @p_variant_id;
+        ci.IDCartItem AS item_id,
+        ci.IDCart AS cart_id,
+        ci.IDVariant AS variant_id,
+        ci.Quantity AS quantity,
+        ci.CreatedAt AS created_at,
+        ci.UpdatedAt AS updated_at,
+        v.SKU AS sku,
+        v.Attributes AS attributes,
+        v.Price AS price,
+        v.StockPhysical AS stock_physical,
+        v.StockReserved AS stock_reserved,
+        (v.StockPhysical - v.StockReserved) AS stock_available,
+        p.IDProduct AS product_id,
+        p.Name AS product_name,
+        coverImg.ImageURL AS main_image_url,
+        c.Name AS category_name
+    FROM CartItems ci
+    INNER JOIN ProductVariants v ON ci.IDVariant = v.IDVariant
+    INNER JOIN Products p ON v.IDProduct = p.IDProduct
+    INNER JOIN Categories c ON p.IDCategory = c.IDCategory
+    OUTER APPLY (
+        SELECT TOP 1 pi.ImageURL
+        FROM ProductImages pi
+        WHERE pi.IDProduct = p.IDProduct
+        ORDER BY pi.IsCover DESC, pi.SortOrder ASC, pi.CreatedAt ASC
+    ) coverImg
+    WHERE ci.IDCart = @p_cart_id AND ci.IDVariant = @p_variant_id;
 END;
 GO
 
@@ -224,12 +243,12 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DELETE FROM cart_items
-    WHERE cart_id = @p_cart_id AND variant_id = @p_variant_id;
+    DELETE FROM CartItems
+    WHERE IDCart = @p_cart_id AND IDVariant = @p_variant_id;
 
-    UPDATE carts
-    SET updated_at = GETDATE()
-    WHERE id = @p_cart_id;
+    UPDATE Carts
+    SET UpdatedAt = GETDATE()
+    WHERE IDCart = @p_cart_id;
 END;
 GO
 
@@ -240,12 +259,12 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DELETE FROM cart_items
-    WHERE cart_id = @p_cart_id;
+    DELETE FROM CartItems
+    WHERE IDCart = @p_cart_id;
 
-    UPDATE carts
-    SET updated_at = GETDATE()
-    WHERE id = @p_cart_id;
+    UPDATE Carts
+    SET UpdatedAt = GETDATE()
+    WHERE IDCart = @p_cart_id;
 END;
 GO
 
@@ -260,13 +279,13 @@ BEGIN
     DECLARE @v_guest_cart_id VARCHAR(36);
     DECLARE @v_user_cart_id VARCHAR(36);
 
-    SELECT @v_guest_cart_id = id
-    FROM carts
-    WHERE guest_token = @p_guest_token;
+    SELECT @v_guest_cart_id = IDCart
+    FROM Carts
+    WHERE GuestToken = @p_guest_token;
 
-    SELECT @v_user_cart_id = id
-    FROM carts
-    WHERE user_id = @p_user_id;
+    SELECT @v_user_cart_id = IDCart
+    FROM Carts
+    WHERE IDUser = @p_user_id;
 
     -- Caso 1: No existe carrito para ese guest_token
     IF @v_guest_cart_id IS NULL
@@ -274,18 +293,18 @@ BEGIN
         IF @v_user_cart_id IS NULL
         BEGIN
             SET @v_user_cart_id = CAST(NEWID() AS VARCHAR(36));
-            INSERT INTO carts (id, user_id, guest_token, created_at, updated_at)
+            INSERT INTO Carts (IDCart, IDUser, GuestToken, CreatedAt, UpdatedAt)
             VALUES (@v_user_cart_id, @p_user_id, NULL, GETDATE(), GETDATE());
         END
     END
     -- Caso 2: Existe carrito de invitado pero el usuario no tenía un carrito previo
     ELSE IF @v_user_cart_id IS NULL
     BEGIN
-        UPDATE carts
-        SET user_id = @p_user_id,
-            guest_token = NULL,
-            updated_at = GETDATE()
-        WHERE id = @v_guest_cart_id;
+        UPDATE Carts
+        SET IDUser = @p_user_id,
+            GuestToken = NULL,
+            UpdatedAt = GETDATE()
+        WHERE IDCart = @v_guest_cart_id;
 
         SET @v_user_cart_id = @v_guest_cart_id;
     END
@@ -294,45 +313,45 @@ BEGIN
     BEGIN
         -- 3a. Incrementar cantidad para variantes coincidentes
         UPDATE u
-        SET u.quantity = u.quantity + g.quantity,
-            u.updated_at = GETDATE()
-        FROM cart_items u
-        INNER JOIN cart_items g ON u.variant_id = g.variant_id
-        WHERE u.cart_id = @v_user_cart_id AND g.cart_id = @v_guest_cart_id;
+        SET u.Quantity = u.Quantity + g.Quantity,
+            u.UpdatedAt = GETDATE()
+        FROM CartItems u
+        INNER JOIN CartItems g ON u.IDVariant = g.IDVariant
+        WHERE u.IDCart = @v_user_cart_id AND g.IDCart = @v_guest_cart_id;
 
         -- 3b. Insertar items exclusivos del carrito invitado
-        INSERT INTO cart_items (id, cart_id, variant_id, quantity, created_at, updated_at)
+        INSERT INTO CartItems (IDCartItem, IDCart, IDVariant, Quantity, CreatedAt, UpdatedAt)
         SELECT
             CAST(NEWID() AS VARCHAR(36)),
             @v_user_cart_id,
-            g.variant_id,
-            g.quantity,
+            g.IDVariant,
+            g.Quantity,
             GETDATE(),
             GETDATE()
-        FROM cart_items g
-        WHERE g.cart_id = @v_guest_cart_id
+        FROM CartItems g
+        WHERE g.IDCart = @v_guest_cart_id
           AND NOT EXISTS (
               SELECT 1
-              FROM cart_items u
-              WHERE u.cart_id = @v_user_cart_id AND u.variant_id = g.variant_id
+              FROM CartItems u
+              WHERE u.IDCart = @v_user_cart_id AND u.IDVariant = g.IDVariant
           );
 
         -- 3c. Eliminar items y el carrito de invitado
-        DELETE FROM cart_items WHERE cart_id = @v_guest_cart_id;
-        DELETE FROM carts WHERE id = @v_guest_cart_id;
+        DELETE FROM CartItems WHERE IDCart = @v_guest_cart_id;
+        DELETE FROM Carts WHERE IDCart = @v_guest_cart_id;
 
-        UPDATE carts
-        SET updated_at = GETDATE()
-        WHERE id = @v_user_cart_id;
+        UPDATE Carts
+        SET UpdatedAt = GETDATE()
+        WHERE IDCart = @v_user_cart_id;
     END
 
     SELECT
-        id,
-        user_id,
-        guest_token,
-        created_at,
-        updated_at
-    FROM carts
-    WHERE id = @v_user_cart_id;
+        IDCart AS id,
+        IDUser AS user_id,
+        GuestToken AS guest_token,
+        CreatedAt AS created_at,
+        UpdatedAt AS updated_at
+    FROM Carts
+    WHERE IDCart = @v_user_cart_id;
 END;
 GO
