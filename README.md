@@ -81,29 +81,39 @@ VITE_API_URL=http://localhost:5600/api
 
 ### Ubicación de Scripts SQL
 Todos los scripts de base de datos se encuentran versionados en `backend/src/shared/db/scripts/`:
-- **Esquema de Tablas y Restricciones**: `backend/src/shared/db/scripts/db.sql`
-  - Tablas: `users`, `user_sessions`, `addresses`, `categories`, `products`, `product_variants`, `kardex_movements`, `carts`, `cart_items`, `stock_reservations`, `coupons`, `coupon_usages`, `orders`, `order_items`, `order_status_history`, `order_returns`, `audit_logs`.
+- **Esquema de Tablas y Restricciones (`PascalCase`)**: `backend/src/shared/db/scripts/db.sql`
+  - Tablas principales: `SystemSettings`, `Users`, `UserSessions`, `Categories`, `Products`, `ProductImages`, `ProductVariants`, `KardexMovements`, `Carts`, `CartItems`, `StockReservations`, `AuditLogs` (junto con `Addresses`, `Coupons`, `CouponUsages`, `Orders`, `OrderItems`, `OrderStatusHistory`, `OrderReturns`).
+- **Triggers de Integridad e Inmutabilidad (`TR/*.sql`)**:
+  - `backend/src/shared/db/scripts/TR/TR_AuditLogs_PreventModify.sql` (`TR_AuditLogs_PreventModify`: impide cualquier `UPDATE` o `DELETE` sobre `AuditLogs`).
 - **Procedimientos Almacenados (SPs)**:
-  - `backend/src/shared/db/scripts/SP/SP_Auth_Users.sql` (14 SPs de Auth y Usuarios)
-  - `backend/src/shared/db/scripts/SP/SP_Products_Categories.sql` (13 SPs de Productos, Variantes, Categorías y Kardex)
-  - `backend/src/shared/db/scripts/SP/SP_Carts.sql` (7 SPs de Carrito de Compras)
+  - `backend/src/shared/db/scripts/SP/SP_Auth_Users.sql` (14 SPs de Auth y Usuarios sobre `Users` y `UserSessions`)
+  - `backend/src/shared/db/scripts/SP/SP_Products_Categories.sql` (13 SPs de Productos, Imágenes en `ProductImages`, Variantes en `ProductVariants`, Categorías en `Categories`, `KardexMovements` y `AuditLogs`)
+  - `backend/src/shared/db/scripts/SP/SP_Carts.sql` (7 SPs de Carrito de Compras sobre `Carts` y `CartItems`)
+  - `backend/src/shared/db/scripts/SP/SP_Modulo_Proceso.sql` (SPs de reservas temporales `SP_Inventario_ReservarExistencia`, `SP_Inventario_LiberarReservasVencidas` y configuración `SP_Configuracion_UpsertParametro`)
 
 ### Scripts de Despliegue
 Para inicializar la base de datos sin necesidad de clientes externos, se crearon scripts dedicados ejecutables con npm desde la carpeta `backend/`:
 
-1. **Creación del Esquema de Tablas (`db.sql`)**:
+1. **Creación del Esquema de Tablas (`db.sql`) y Triggers (`TR/*.sql`)**:
    ```bash
    cd backend
    npm run db:init
    ```
-   *(Ejecuta `backend/src/shared/db/deploy-db.ts` creando todas las tablas con sus llaves foráneas y tipos estandarizados `DECIMAL(12,2)` e `INT`).*
+   *(Ejecuta `backend/src/shared/db/deploy-db.ts` eliminando tablas previas en orden inverso de dependencias, creando todas las tablas `PascalCase` con sus llaves foráneas y tipos estandarizados `DECIMAL(12,2)` e `INT`, y registrando automáticamente el trigger `TR_AuditLogs_PreventModify`).*
 
-2. **Despliegue y Actualización de Todos los Stored Procedures (`SP/*.sql`)**:
+2. **Despliegue Independiente de Triggers (`TR/*.sql`)**:
+   ```bash
+   cd backend
+   npm run db:tr
+   ```
+   *(Ejecuta `backend/src/shared/db/deploy-tr.ts`, registrando de forma idempotente con `CREATE OR ALTER TRIGGER` el trigger `TR_AuditLogs_PreventModify` sobre `AuditLogs`).*
+
+3. **Despliegue y Actualización de Todos los Stored Procedures (`SP/*.sql`)**:
    ```bash
    cd backend
    npm run db:sp
    ```
-   *(Ejecuta `backend/src/shared/db/deploy-sp.ts`, registrando de forma idempotente con `CREATE OR ALTER PROCEDURE` los 34 Stored Procedures en `shop_cart_db`).*
+   *(Ejecuta `backend/src/shared/db/deploy-sp.ts`, registrando de forma idempotente con `CREATE OR ALTER PROCEDURE` los 37 Stored Procedures en `shop_cart_db`).*
 
 ### Ejecución de Seeds y Usuario de Prueba
 
@@ -180,11 +190,13 @@ flowchart TD
     end
 
     subgraph Database["Microsoft SQL Server (shop_cart_db)"]
-        SPs["34 Stored Procedures (SP_Modulo_Proceso)"]
-        Tables["Tablas Relacionales (users, products, variants, carts, kardex, audit)"]
+        SPs["37 Stored Procedures (SP_Modulo_Proceso)"]
+        Triggers["Trigger Inmutable (TR_AuditLogs_PreventModify)"]
+        Tables["Tablas PascalCase (Users, Products, ProductImages, ProductVariants, Carts, KardexMovements, AuditLogs, SystemSettings)"]
         
         MSSQL_Repo -->|Parámetros Tipados| SPs
         SPs -->|Transacciones & Locks| Tables
+        Triggers -->|Protege contra UPDATE/DELETE| Tables
     end
 ```
 

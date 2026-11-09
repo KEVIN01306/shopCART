@@ -10,6 +10,7 @@
     "start": "node --import tsx src/server.ts",
     "build": "tsc && tsc-alias",
     "db:init": "npx tsx src/shared/db/deploy-db.ts",
+    "db:tr": "npx tsx src/shared/db/deploy-tr.ts",
     "db:sp": "npx tsx src/shared/db/deploy-sp.ts",
     "seed": "npx tsx src/shared/db/deploy-sp.ts && npx tsx src/shared/db/seed.ts",
     "db:seed": "npx tsx src/shared/db/deploy-sp.ts && npx tsx src/shared/db/seed.ts",

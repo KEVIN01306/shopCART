@@ -12,6 +12,12 @@ export interface CategoryDbRow {
     is_active: boolean | number;
     created_at: Date;
     product_count?: number;
+    // Dual compatibility with PascalCase schema (Categories)
+    IDCategory?: string;
+    Name?: string;
+    Description?: string | null;
+    IsActive?: boolean | number;
+    CreatedAt?: Date;
 }
 
 export interface ProductVariantDbRow {
@@ -26,6 +32,17 @@ export interface ProductVariantDbRow {
     is_active: boolean | number;
     created_at?: Date;
     updated_at?: Date;
+    // Dual compatibility with PascalCase schema (ProductVariants)
+    IDVariant?: string;
+    IDProduct?: string;
+    SKU?: string;
+    Attributes?: string | null;
+    Price?: number | string;
+    StockPhysical?: number;
+    StockReserved?: number;
+    IsActive?: boolean | number;
+    CreatedAt?: Date;
+    UpdatedAt?: Date;
 }
 
 export interface ProductDbRow {
@@ -48,6 +65,15 @@ export interface ProductDbRow {
     default_variant_sku?: string | null;
     default_variant_attributes?: string | null;
     total_count?: number | null;
+    // Dual compatibility with PascalCase schema (Products & ProductImages)
+    IDProduct?: string;
+    IDCategory?: string;
+    Name?: string;
+    Description?: string | null;
+    ImageURL?: string | null;
+    IsActive?: boolean | number;
+    CreatedAt?: Date;
+    UpdatedAt?: Date;
 }
 
 export class ProductMapper {
@@ -81,35 +107,38 @@ export class ProductMapper {
 
     static toCategory(row: CategoryDbRow): Category {
         return {
-            id: row.id,
-            name: row.name,
-            description: row.description ?? null,
-            isActive: Boolean(row.is_active),
+            id: row.id ?? row.IDCategory ?? '',
+            name: row.name ?? row.Name ?? '',
+            description: row.description ?? row.Description ?? null,
+            isActive: Boolean(row.is_active ?? row.IsActive),
             productCount: Number(row.product_count ?? 0),
-            createdAt: new Date(row.created_at),
+            createdAt: new Date(row.created_at ?? row.CreatedAt ?? new Date()),
         };
     }
 
     static toVariant(row: ProductVariantDbRow): ProductVariant {
-        const stockPhysical = Number(row.stock_physical ?? 0);
-        const stockReserved = Number(row.stock_reserved ?? 0);
+        const stockPhysical = Number(row.stock_physical ?? row.StockPhysical ?? 0);
+        const stockReserved = Number(row.stock_reserved ?? row.StockReserved ?? 0);
         const stockAvailable =
             row.stock_available !== undefined
                 ? Number(row.stock_available)
                 : stockPhysical - stockReserved;
 
+        const createdRaw = row.created_at ?? row.CreatedAt;
+        const updatedRaw = row.updated_at ?? row.UpdatedAt;
+
         return {
-            id: row.id,
-            productId: row.product_id,
-            sku: row.sku,
-            attributes: ProductMapper.parseAttributes(row.attributes),
-            price: Number(row.price ?? 0),
+            id: row.id ?? row.IDVariant ?? '',
+            productId: row.product_id ?? row.IDProduct ?? '',
+            sku: row.sku ?? row.SKU ?? '',
+            attributes: ProductMapper.parseAttributes(row.attributes ?? row.Attributes),
+            price: Number(row.price ?? row.Price ?? 0),
             stockPhysical,
             stockReserved,
             stockAvailable,
-            isActive: Boolean(row.is_active),
-            createdAt: row.created_at ? new Date(row.created_at) : undefined,
-            updatedAt: row.updated_at ? new Date(row.updated_at) : undefined,
+            isActive: Boolean(row.is_active ?? row.IsActive),
+            createdAt: createdRaw ? new Date(createdRaw) : undefined,
+            updatedAt: updatedRaw ? new Date(updatedRaw) : undefined,
         };
     }
 
@@ -154,13 +183,13 @@ export class ProductMapper {
         const defaultVariant = variants[0];
 
         return {
-            id: row.id,
-            categoryId: row.category_id,
+            id: row.id ?? row.IDProduct ?? '',
+            categoryId: row.category_id ?? row.IDCategory ?? '',
             categoryName: row.category_name,
-            name: row.name,
-            description: row.description ?? null,
-            mainImageUrl: row.main_image_url ?? null,
-            isActive: Boolean(row.is_active),
+            name: row.name ?? row.Name ?? '',
+            description: row.description ?? row.Description ?? null,
+            mainImageUrl: row.main_image_url ?? row.ImageURL ?? null,
+            isActive: Boolean(row.is_active ?? row.IsActive),
             minPrice,
             maxPrice,
             totalStockPhysical,
@@ -175,8 +204,8 @@ export class ProductMapper {
                 ? ProductMapper.parseAttributes(row.default_variant_attributes)
                 : defaultVariant?.attributes ?? {},
             variants,
-            createdAt: new Date(row.created_at),
-            updatedAt: new Date(row.updated_at),
+            createdAt: new Date(row.created_at ?? row.CreatedAt ?? new Date()),
+            updatedAt: new Date(row.updated_at ?? row.UpdatedAt ?? new Date()),
         };
     }
 }

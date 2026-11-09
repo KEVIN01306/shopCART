@@ -11,8 +11,31 @@ interface SeedUserRow {
     is_verify: boolean | number;
 }
 
+const INITIAL_SYSTEM_SETTINGS: Array<{
+    keyName: string;
+    keyValue: string;
+    description: string;
+}> = [
+    {
+        keyName: 'CURRENCY_CODE',
+        keyValue: 'GTQ',
+        description: 'Moneda oficial del sistema ShopCart (Quetzales)',
+    },
+    {
+        keyName: 'RESERVATION_EXP_MINUTES',
+        keyValue: '15',
+        description: 'Minutos de vigencia de reserva temporal de inventario en checkout',
+    },
+    {
+        keyName: 'STORE_NAME',
+        keyValue: 'shopCART',
+        description: 'Nombre comercial de la tienda',
+    },
+];
+
 /**
- * Seed exclusivo para el usuario Administrador inicial del sistema ShopCart.
+ * Seed exclusivo para los parámetros base (SystemSettings) y el usuario Administrador
+ * inicial del sistema ShopCart.
  * Cumple estrictamente con CONTEXT.md: invocación exclusiva de Stored Procedures
  * en Microsoft SQL Server (mssql) con parámetros fuertemente tipados.
  */
@@ -23,12 +46,24 @@ async function seedAdminUser(): Promise<void> {
     const adminLastName = 'Sistema';
     const adminRole = 'Administrador';
 
-    console.log('Iniciando seed de usuario Administrador en Microsoft SQL Server...');
+    console.log('Iniciando seed de configuración base (SystemSettings) y usuario Administrador en Microsoft SQL Server...');
 
     const pool = await getPool();
     const hashProvider = new Argon2HashProvider();
 
     try {
+        for (const setting of INITIAL_SYSTEM_SETTINGS) {
+            await pool
+                .request()
+                .input('p_key_name', sql.VarChar(50), setting.keyName)
+                .input('p_key_value', sql.VarChar(255), setting.keyValue)
+                .input('p_description', sql.VarChar(255), setting.description)
+                .execute('SP_Configuracion_UpsertParametro');
+        }
+        console.log(
+            `Parámetros iniciales de SystemSettings registrados exitosamente (${INITIAL_SYSTEM_SETTINGS.map((s) => `${s.keyName}=${s.keyValue}`).join(', ')}).`
+        );
+
         const existingResult = await pool
             .request()
             .input('p_email', sql.VarChar(255), adminEmail)

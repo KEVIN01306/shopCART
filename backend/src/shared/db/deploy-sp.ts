@@ -8,11 +8,17 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 /**
- * Despliega los Stored Procedures oficiales (SP_Auth_*, SP_Usuarios_*, SP_Categorias_*, SP_Productos_*)
+ * Despliega los Stored Procedures oficiales (SP_Auth_*, SP_Usuarios_*, SP_Categorias_*,
+ * SP_Productos_*, SP_Carritos_*, SP_Inventario_*, SP_Configuracion_*)
  * en Microsoft SQL Server (shop_cart_db).
  */
 export async function deployStoredProcedures(shouldClosePool = true): Promise<void> {
-    const spFiles = ['SP_Auth_Users.sql', 'SP_Products_Categories.sql', 'SP_Carts.sql'];
+    const spFiles = [
+        'SP_Auth_Users.sql',
+        'SP_Products_Categories.sql',
+        'SP_Carts.sql',
+        'SP_Modulo_Proceso.sql',
+    ];
     const pool = await getPool();
 
     try {

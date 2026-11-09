@@ -6,6 +6,8 @@ interface SeedCategoryRow {
     id: string;
     name: string;
     product_count?: number;
+    IDCategory?: string;
+    Name?: string;
 }
 
 interface SeedVariantDefinition {
@@ -322,7 +324,11 @@ async function seedCatalog(): Promise<void> {
 
         const categoryMap = new Map<string, string>();
         for (const cat of existingCategories) {
-            categoryMap.set(cat.name.toLowerCase(), cat.id);
+            const catName = cat.name ?? cat.Name ?? '';
+            const catId = cat.id ?? cat.IDCategory ?? '';
+            if (catName && catId) {
+                categoryMap.set(catName.toLowerCase(), catId);
+            }
         }
 
         for (const categoryDef of INITIAL_CATEGORIES) {
@@ -338,7 +344,7 @@ async function seedCatalog(): Promise<void> {
                 .execute<SeedCategoryRow>('SP_Categorias_Crear');
 
             const row = createdCat.recordset?.[0];
-            categoryMap.set(categoryDef.name.toLowerCase(), row?.id ?? newCategoryId);
+            categoryMap.set(categoryDef.name.toLowerCase(), row?.id ?? row?.IDCategory ?? newCategoryId);
             console.log(`Categoría creada: ${categoryDef.name}`);
         }
 
