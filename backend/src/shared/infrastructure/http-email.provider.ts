@@ -1,6 +1,6 @@
 import type { EmailProvider, SendCustomEmailOptions, SendEmailResult } from "../domain/email.provider.js";
 
-const DEFAULT_LOGO_URL = "https://pub-59913b0c53f044ad8a24e05f6a21ed2e.r2.dev/assets/logo-cad.png";
+const DEFAULT_LOGO_URL = "https://pub-d05514d87a39422cbf9453e8ec02d871.r2.dev/logo_shop_cart.png";
 
 export class HttpEmailProvider implements EmailProvider {
     private readonly baseUrl: string;
