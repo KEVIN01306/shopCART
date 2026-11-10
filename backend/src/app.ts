@@ -10,11 +10,24 @@ app.use(cors({
         process.env.FRONTEND_URL || 'http://localhost:5601',
         'http://localhost:5601',
         'http://localhost:5173',
+        'http://localhost:5174',
         'http://localhost:4001',
+        'http://localhost:3000',
     ],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-guest-token', 'X-Guest-Token']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+        'Content-Type',
+        'Authorization',
+        'x-guest-token',
+        'X-Guest-Token',
+        'idempotency-key',
+        'Idempotency-Key',
+        'Accept',
+        'Origin',
+        'X-Requested-With',
+    ],
+    exposedHeaders: ['idempotency-key', 'Idempotency-Key'],
 }));
 app.set('trust proxy', true);
 // Increase body size limits to accept base64 image payloads (adjust if needed)
