@@ -41,9 +41,10 @@ export class CreateUserUseCase {
                 throw new AppError("Email already in use", "EMAIL_ALREADY_EXISTS", 400);
             }
 
-            // Determine or generate secure password
+            // Respetar estrictamente la contraseña del input enviada desde el frontend.
+            // Solo generar si no se proporcionó ninguna contraseña.
             let rawPassword = data.passwordRaw?.trim();
-            if (data.autoGeneratePassword || !rawPassword) {
+            if (!rawPassword) {
                 rawPassword = generateSecurePassword(12);
             }
 
@@ -82,7 +83,7 @@ export class CreateUserUseCase {
                 ...user,
                 isVerify: true,
                 emailSent: emailResult.success,
-                generatedPassword: data.autoGeneratePassword ? rawPassword : undefined,
+                generatedPassword: rawPassword,
             };
         } catch (error) {
             if (error instanceof UniqueConstraintError) {
