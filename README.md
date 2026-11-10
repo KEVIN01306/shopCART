@@ -44,8 +44,8 @@ Bienvenido a **shopCART**, una solución integral de comercio electrónico y ges
 Copia `backend/.env.example` a `backend/.env`:
 
 ```env
-PORT=4000
-FRONTEND_URL=http://localhost:8001
+PORT=5600
+FRONTEND_URL=http://localhost:5601
 
 # Microsoft SQL Server (Transact-SQL)
 DB_SERVER=localhost
@@ -93,7 +93,7 @@ SEED_CLIENT_PASSWORD=12345678
 ### Variables de Entorno del Frontend (`frontend/.env`)
 Copia `frontend/.env.example` a `frontend/.env`:
 ```env
-VITE_API_URL=http://localhost:4000/api
+VITE_API_URL=http://localhost:5600/api
 ```
 
 ---
@@ -755,8 +755,8 @@ cp .env.example .env
 # Compilar para producción o verificar TypeScript
 npm run build
 
-# Iniciar servidor de desarrollo en Vite (puerto 8001 / 5173)
+# Iniciar servidor de desarrollo en Vite (puerto 5601 / 5173)
 npm run dev
 ```
 
-Abre tu navegador en `http://localhost:8001` para interactuar con la plataforma comercial **shopCART**.
+Abre tu navegador en `http://localhost:5601` para interactuar con la plataforma comercial **shopCART**.
