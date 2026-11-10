@@ -1,5 +1,5 @@
 import { api } from '../../../../core/api/axios.instance';
-import type { CartDto, CartItemDto } from '../../domain/cart.types';
+import type { CartDto } from '../../domain/cart.types';
 
 interface ApiResponse<T> {
     status: string;
@@ -26,8 +26,8 @@ export const addRemoteCartItem = async (
     variantId: string,
     quantity: number,
     guestToken?: string | null
-): Promise<CartItemDto> => {
-    const response = await api.post<ApiResponse<CartItemDto>>(
+): Promise<CartDto> => {
+    const response = await api.post<ApiResponse<CartDto>>(
         '/cart/items',
         { variantId, quantity },
         { headers: getGuestHeaders(guestToken) }
@@ -39,8 +39,8 @@ export const updateRemoteCartItem = async (
     variantId: string,
     quantity: number,
     guestToken?: string | null
-): Promise<CartItemDto> => {
-    const response = await api.put<ApiResponse<CartItemDto>>(
+): Promise<CartDto> => {
+    const response = await api.put<ApiResponse<CartDto>>(
         `/cart/items/${variantId}`,
         { quantity },
         { headers: getGuestHeaders(guestToken) }

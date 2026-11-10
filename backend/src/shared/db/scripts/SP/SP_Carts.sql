@@ -80,6 +80,7 @@ BEGIN
         p.IDProduct AS product_id,
         p.Name AS product_name,
         coverImg.ImageURL AS main_image_url,
+        p.IDCategory AS category_id,
         c.Name AS category_name
     FROM CartItems ci
     INNER JOIN ProductVariants v ON ci.IDVariant = v.IDVariant
@@ -120,10 +121,29 @@ BEGIN
         THROW 50001, 'La variante de producto no existe o está inactiva.', 1;
     END
 
-    IF EXISTS (SELECT 1 FROM CartItems WHERE IDCart = @p_cart_id AND IDVariant = @p_variant_id)
+    DECLARE @v_available_stock INT;
+    DECLARE @v_existing_qty INT;
+    DECLARE @v_desired_qty INT;
+
+    SELECT @v_available_stock = (StockPhysical - StockReserved)
+    FROM ProductVariants
+    WHERE IDVariant = @p_variant_id AND IsActive = 1;
+
+    SELECT @v_existing_qty = Quantity
+    FROM CartItems
+    WHERE IDCart = @p_cart_id AND IDVariant = @p_variant_id;
+
+    SET @v_desired_qty = ISNULL(@v_existing_qty, 0) + @p_quantity;
+
+    IF @v_desired_qty > @v_available_stock
+    BEGIN
+        THROW 50002, 'STOCK_INSUFICIENTE: La cantidad solicitada supera las existencias disponibles en inventario.', 1;
+    END
+
+    IF @v_existing_qty IS NOT NULL
     BEGIN
         UPDATE CartItems
-        SET Quantity = Quantity + @p_quantity,
+        SET Quantity = @v_desired_qty,
             UpdatedAt = GETDATE()
         WHERE IDCart = @p_cart_id AND IDVariant = @p_variant_id;
     END
@@ -153,6 +173,7 @@ BEGIN
         p.IDProduct AS product_id,
         p.Name AS product_name,
         coverImg.ImageURL AS main_image_url,
+        p.IDCategory AS category_id,
         c.Name AS category_name
     FROM CartItems ci
     INNER JOIN ProductVariants v ON ci.IDVariant = v.IDVariant
@@ -194,6 +215,16 @@ BEGIN
             THROW 50001, 'El item no existe en el carrito.', 1;
         END
 
+        DECLARE @v_available_stock INT;
+        SELECT @v_available_stock = (StockPhysical - StockReserved)
+        FROM ProductVariants
+        WHERE IDVariant = @p_variant_id AND IsActive = 1;
+
+        IF @v_available_stock IS NULL OR @p_quantity > @v_available_stock
+        BEGIN
+            THROW 50002, 'STOCK_INSUFICIENTE: La cantidad solicitada supera las existencias disponibles en inventario.', 1;
+        END
+
         UPDATE CartItems
         SET Quantity = @p_quantity,
             UpdatedAt = GETDATE()
@@ -220,6 +251,7 @@ BEGIN
         p.IDProduct AS product_id,
         p.Name AS product_name,
         coverImg.ImageURL AS main_image_url,
+        p.IDCategory AS category_id,
         c.Name AS category_name
     FROM CartItems ci
     INNER JOIN ProductVariants v ON ci.IDVariant = v.IDVariant

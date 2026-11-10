@@ -4,6 +4,7 @@ import {
     Inventory2Outlined,
     GroupOutlined,
     PersonOutlineOutlined,
+    LoyaltyOutlined,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -43,6 +44,13 @@ const MenuItems: MenuItem[] = [
     },
 
     { group: 'Administración', roles: ['Administrador'] },
+    {
+        module: 'Coupons',
+        name: 'Cupones y Promociones',
+        icon: LoyaltyOutlined,
+        link: '/coupons',
+        roles: ['Administrador'],
+    },
     {
         module: 'Users',
         name: 'Usuarios',

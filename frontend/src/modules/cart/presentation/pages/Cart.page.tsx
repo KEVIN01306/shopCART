@@ -34,56 +34,131 @@ import {
     LoyaltyOutlined,
 } from '@mui/icons-material';
 import { useCartStore } from '../../../../core/store/cartStore';
+import { validateCouponCode } from '../../../coupons/infrastructure/services/coupons.service';
 
 const FREE_SHIPPING_THRESHOLD = 300;
 const STANDARD_SHIPPING_COST = 25;
 
 export const CartPage: React.FC = () => {
     const navigate = useNavigate();
-    const { items, updateQuantity, removeItem, clearCart } = useCartStore();
+    const {
+        items,
+        guestToken,
+        appliedCoupon,
+        setAppliedCoupon,
+        removeCoupon,
+        updateQuantity,
+        removeItem,
+        clearCart,
+    } = useCartStore();
 
-    const [couponCode, setCouponCode] = useState<string>('');
-    const [appliedDiscount, setAppliedDiscount] = useState<number>(0);
+    const [couponCode, setCouponCode] = useState<string>(
+        appliedCoupon?.code || ''
+    );
+    const [validatingCoupon, setValidatingCoupon] = useState<boolean>(false);
     const [couponMessage, setCouponMessage] = useState<{
         type: 'success' | 'error';
         text: string;
     } | null>(null);
 
-    const subtotal = items.reduce((acc, item) => acc + item.quantity * item.price, 0);
-    const shippingCost = items.length === 0 || subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_COST;
-    const discountAmount = Number((subtotal * appliedDiscount).toFixed(2));
-    const grandTotal = Math.max(0, subtotal - discountAmount + shippingCost);
+    const subtotal = Number(
+        items
+            .reduce((acc, item) => acc + item.quantity * item.price, 0)
+            .toFixed(2)
+    );
+    const shippingCost =
+        items.length === 0 || subtotal >= FREE_SHIPPING_THRESHOLD
+            ? 0
+            : STANDARD_SHIPPING_COST;
+
+    // Recalculate discount accurately against current cart items (including category filter & cap >= Q0.00)
+    let discountAmount = 0;
+    if (appliedCoupon && subtotal >= appliedCoupon.minOrderAmount) {
+        const eligibleSub = appliedCoupon.categoryId
+            ? Number(
+                  items
+                      .filter(
+                          (i) =>
+                              !i.categoryId ||
+                              i.categoryId === appliedCoupon.categoryId
+                      )
+                      .reduce((acc, i) => acc + i.quantity * i.price, 0)
+                      .toFixed(2)
+              )
+            : subtotal;
+
+        const rawDiscount =
+            appliedCoupon.discountType === 'PORCENTAJE'
+                ? Number(
+                      (
+                          eligibleSub *
+                          (appliedCoupon.discountValue / 100)
+                      ).toFixed(2)
+                  )
+                : Number(appliedCoupon.discountValue.toFixed(2));
+
+        discountAmount = Math.min(rawDiscount, eligibleSub, subtotal);
+    }
+
+    const discountedSubtotal = Math.max(
+        0,
+        Number((subtotal - discountAmount).toFixed(2))
+    );
+    const grandTotal = Number((discountedSubtotal + shippingCost).toFixed(2));
 
     const amountForFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
     const freeShippingProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
-    const handleApplyCoupon = (e: React.FormEvent) => {
+    const handleApplyCoupon = async (e: React.FormEvent) => {
         e.preventDefault();
         const code = couponCode.trim().toUpperCase();
         if (!code) {
-            setCouponMessage({ type: 'error', text: 'Ingresa un código de cupón válido.' });
+            setCouponMessage({
+                type: 'error',
+                text: 'Ingresa un código de cupón válido.',
+            });
             return;
         }
 
-        if (code === 'SHOP10' || code === 'DESCUENTO10') {
-            setAppliedDiscount(0.1);
+        setValidatingCoupon(true);
+        setCouponMessage(null);
+        try {
+            const result = await validateCouponCode({
+                code,
+                subtotal,
+                guestToken,
+            });
+            setAppliedCoupon(result);
+            setCouponCode(result.code);
             setCouponMessage({
                 type: 'success',
-                text: '¡Cupón aplicado con éxito! 10% de descuento en tu compra.',
+                text: `¡Cupón ${result.code} aplicado! Ahorras Q${result.discountAmount.toFixed(2)}${
+                    result.categoryName
+                        ? ` en la categoría ${result.categoryName}`
+                        : ''
+                }.`,
             });
-        } else if (code === 'BIENVENIDO' || code === 'ECOM20') {
-            setAppliedDiscount(0.2);
-            setCouponMessage({
-                type: 'success',
-                text: '¡Cupón de bienvenida aplicado! 20% de descuento en tu compra.',
-            });
-        } else {
-            setAppliedDiscount(0);
+        } catch (err: unknown) {
+            removeCoupon();
+            const axiosErr = err as {
+                response?: { data?: { message?: string } };
+            };
+            const backendMsg =
+                axiosErr.response?.data?.message ||
+                'El cupón ingresado no existe, ha vencido o no cumple las condiciones.';
             setCouponMessage({
                 type: 'error',
-                text: 'El cupón ingresado no es válido o ha expirado.',
+                text: backendMsg,
             });
+        } finally {
+            setValidatingCoupon(false);
         }
+    };
+
+    const handleRemoveCoupon = () => {
+        removeCoupon();
+        setCouponCode('');
+        setCouponMessage(null);
     };
 
     const handleProceedToCheckout = () => {
@@ -442,6 +517,23 @@ export const CartPage: React.FC = () => {
                                                         }}
                                                     >
                                                         SKU: <strong>{item.sku}</strong>
+                                                        {item.stockAvailable !== undefined && (
+                                                            <Box
+                                                                component="span"
+                                                                sx={{
+                                                                    ml: 1,
+                                                                    color:
+                                                                        item.quantity >=
+                                                                        item.stockAvailable
+                                                                            ? '#D97706'
+                                                                            : '#047857',
+                                                                    fontWeight: 700,
+                                                                }}
+                                                            >
+                                                                · Stock disponible:{' '}
+                                                                {item.stockAvailable} uds.
+                                                            </Box>
+                                                        )}
                                                     </Typography>
 
                                                     {attributePairs.length > 0 && (
@@ -699,17 +791,33 @@ export const CartPage: React.FC = () => {
                                     </Typography>
                                 </Box>
 
-                                {appliedDiscount > 0 && (
+                                {appliedCoupon && discountAmount > 0 && (
                                     <Box
                                         sx={{
                                             display: 'flex',
                                             justifyContent: 'space-between',
+                                            alignItems: 'center',
                                             color: '#10B981',
                                         }}
                                     >
-                                        <Typography sx={{ fontSize: '13.5px' }}>
-                                            Descuento ({appliedDiscount * 100}%)
-                                        </Typography>
+                                        <Stack direction="row" spacing={0.75} sx={{ alignItems: 'center' }}>
+                                            <Typography sx={{ fontSize: '13.5px', fontWeight: 600 }}>
+                                                Descuento ({appliedCoupon.code})
+                                            </Typography>
+                                            <Chip
+                                                label="Quitar"
+                                                size="small"
+                                                onClick={handleRemoveCoupon}
+                                                sx={{
+                                                    height: 18,
+                                                    fontSize: '10px',
+                                                    fontWeight: 700,
+                                                    backgroundColor: '#FEE2E2',
+                                                    color: '#B91C1C',
+                                                    cursor: 'pointer',
+                                                }}
+                                            />
+                                        </Stack>
                                         <Typography sx={{ fontSize: '14px', fontWeight: 700 }}>
                                             -Q{discountAmount.toFixed(2)}
                                         </Typography>
@@ -774,6 +882,7 @@ export const CartPage: React.FC = () => {
                                         id="cart-apply-coupon-btn"
                                         type="submit"
                                         variant="outlined"
+                                        disabled={validatingCoupon}
                                         sx={{
                                             borderRadius: '8px',
                                             borderColor: '#425A8B',
@@ -788,7 +897,7 @@ export const CartPage: React.FC = () => {
                                             },
                                         }}
                                     >
-                                        Aplicar
+                                        {validatingCoupon ? 'Validando...' : 'Aplicar'}
                                     </Button>
                                 </Stack>
 

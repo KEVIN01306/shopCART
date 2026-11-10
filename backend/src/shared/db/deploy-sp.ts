@@ -17,6 +17,7 @@ export async function deployStoredProcedures(shouldClosePool = true): Promise<vo
         'SP_Auth_Users.sql',
         'SP_Products_Categories.sql',
         'SP_Carts.sql',
+        'SP_Coupons.sql',
         'SP_Modulo_Proceso.sql',
     ];
     const pool = await getPool();

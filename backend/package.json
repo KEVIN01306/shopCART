@@ -5,7 +5,7 @@
   "main": "server.ts",
   "type": "module",
   "scripts": {
-    "test": "npx tsx src/modules/Users/user-creation-activation.test.ts && npx tsx src/modules/Products/products-catalog-kardex.test.ts && npx tsx src/modules/Carts/carts.test.ts",
+    "test": "npx tsx src/modules/Users/user-creation-activation.test.ts && npx tsx src/modules/Products/products-catalog-kardex.test.ts && npx tsx src/modules/Carts/carts.test.ts && npx tsx src/modules/Coupons/coupons.test.ts",
     "dev": "cross-env NODE_ENV=development nodemon --exec node --import tsx src/server.ts",
     "start": "node --import tsx src/server.ts",
     "build": "tsc && tsc-alias",

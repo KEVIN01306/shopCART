@@ -12,6 +12,7 @@ export interface CartItemDto {
     productId: string;
     productName: string;
     mainImageUrl: string | null;
+    categoryId?: string;
     categoryName: string;
     itemTotal: number;
 }
@@ -23,4 +24,18 @@ export interface CartDto {
     items: CartItemDto[];
     itemCount: number;
     subtotal: number;
+}
+
+export interface AppliedCouponInfo {
+    couponId: string;
+    code: string;
+    discountType: 'PORCENTAJE' | 'MONTO_FIJO';
+    discountValue: number;
+    minOrderAmount: number;
+    categoryId: string | null;
+    categoryName: string | null;
+    subtotal: number;
+    eligibleSubtotal: number;
+    discountAmount: number;
+    finalTotal: number;
 }

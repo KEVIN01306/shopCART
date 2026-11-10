@@ -5,6 +5,7 @@ import { usersRoutes } from '../../modules/users/presentation/users.routes';
 import { profileRoutes } from '../../modules/profile/presentation/profile.routes';
 import { shopRoutes } from '../../modules/shop/presentation/shop.routes';
 import { productsRoutes } from '../../modules/products/presentation/products.routes';
+import { couponsRoutes } from '../../modules/coupons/presentation/coupons.routes';
 import { ShopCatalogPage } from '../../modules/shop/presentation/shop.lazy';
 import { CartPage } from '../../modules/cart/presentation/cart.lazy';
 import ProtectedRoute from './ProtectedRoute';
@@ -63,6 +64,10 @@ export const appRouter = createBrowserRouter([
                     {
                         path: 'products',
                         children: [...productsRoutes],
+                    },
+                    {
+                        path: 'coupons',
+                        children: [...couponsRoutes],
                     },
                     {
                         path: 'users',

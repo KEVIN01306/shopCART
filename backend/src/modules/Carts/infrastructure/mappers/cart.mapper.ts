@@ -31,6 +31,7 @@ export interface CartItemDbRow {
     product_id: string;
     product_name: string;
     main_image_url: string | null;
+    category_id?: string;
     category_name: string;
     // Dual compatibility with PascalCase schema (CartItems / ProductVariants / Products / ProductImages)
     IDCartItem?: string;
@@ -45,6 +46,7 @@ export interface CartItemDbRow {
     StockPhysical?: number;
     StockReserved?: number;
     IDProduct?: string;
+    IDCategory?: string;
     ImageURL?: string | null;
 }
 
@@ -98,6 +100,7 @@ export class CartMapper {
             productId: row.product_id ?? row.IDProduct ?? '',
             productName: row.product_name,
             mainImageUrl: row.main_image_url ?? row.ImageURL ?? null,
+            categoryId: row.category_id ?? row.IDCategory ?? undefined,
             categoryName: row.category_name,
             itemTotal,
             createdAt: createdRaw ? new Date(createdRaw) : new Date(),

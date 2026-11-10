@@ -12,6 +12,7 @@ export interface CartItem {
     productId: string;
     productName: string;
     mainImageUrl: string | null;
+    categoryId?: string;
     categoryName: string;
     itemTotal: number;
     createdAt: Date;
