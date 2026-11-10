@@ -22,7 +22,45 @@ interface SeedProductDefinition {
     name: string;
     description: string;
     mainImageUrl: string;
+    galleryImages: string[];
     variants: SeedVariantDefinition[];
+}
+
+interface SeedCouponRow {
+    id: string;
+    code: string;
+}
+
+interface SeedUserRow {
+    id: string;
+    email: string;
+    role: string;
+}
+
+interface SeedAddressRow {
+    id: string;
+    user_id: string;
+}
+
+interface SeedCartRow {
+    id: string;
+}
+
+interface SeedOrderRow {
+    id: string;
+    order_number: string;
+    total_count?: number;
+}
+
+interface SeedCatalogProductRow {
+    id: string;
+    default_variant_id?: string | null;
+}
+
+interface SeedCatalogVariantRow {
+    id: string;
+    product_id: string;
+    sku: string;
 }
 
 const INITIAL_CATEGORIES: Array<{ name: string; description: string }> = [
@@ -64,6 +102,10 @@ const INITIAL_PRODUCTS: SeedProductDefinition[] = [
             'BUILT-IN S PEN PRO: Integrated low-latency stylus for precision notes, sketches and remote control.',
         ].join('\n'),
         mainImageUrl: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=900&q=80',
+        galleryImages: [
+            'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?auto=format&fit=crop&w=900&q=80',
+        ],
         variants: [
             {
                 sku: 'SGS22U-PK-512',
@@ -101,6 +143,10 @@ const INITIAL_PRODUCTS: SeedProductDefinition[] = [
             'HIGH-SPEED NVME STORAGE: Instant boot times and encrypted business data protection.',
         ].join('\n'),
         mainImageUrl: 'https://images.unsplash.com/photo-1587831990711-23ca6441447b?auto=format&fit=crop&w=900&q=80',
+        galleryImages: [
+            'https://images.unsplash.com/photo-1587831990711-23ca6441447b?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=80',
+        ],
         variants: [
             {
                 sku: 'DELL-9020-16-512',
@@ -126,6 +172,10 @@ const INITIAL_PRODUCTS: SeedProductDefinition[] = [
             'ALL-IN-ONE MINIMALISM: Includes wireless keyboard and optical mouse in matching snow white.',
         ].join('\n'),
         mainImageUrl: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=900&q=80',
+        galleryImages: [
+            'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=900&q=80',
+        ],
         variants: [
             {
                 sku: 'HP24-AIO-WH-256',
@@ -151,6 +201,10 @@ const INITIAL_PRODUCTS: SeedProductDefinition[] = [
             'COMPLETE CONNECTIVITY: USB-C 3.2, HDMI-out, Gigabit Ethernet and dual-band Wi-Fi 6.',
         ].join('\n'),
         mainImageUrl: 'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=80',
+        galleryImages: [
+            'https://images.unsplash.com/photo-1593640408182-31c70c8268f5?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=900&q=80',
+        ],
         variants: [
             {
                 sku: 'GTW-24-SL-256',
@@ -176,6 +230,10 @@ const INITIAL_PRODUCTS: SeedProductDefinition[] = [
             'CARBON NEUTRAL DESIGN: Swimproof 50m water resistance and crack-resistant front crystal.',
         ].join('\n'),
         mainImageUrl: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=900&q=80',
+        galleryImages: [
+            'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=900&q=80',
+        ],
         variants: [
             {
                 sku: 'AWS9-MID-45',
@@ -207,6 +265,10 @@ const INITIAL_PRODUCTS: SeedProductDefinition[] = [
             'CRAFTED LAMBSKIN & MEMORY FOAM: Foldable luxury travel design with hard aluminum carrying case.',
         ].join('\n'),
         mainImageUrl: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80',
+        galleryImages: [
+            'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1546435770-a3e426bf472b?auto=format&fit=crop&w=900&q=80',
+        ],
         variants: [
             {
                 sku: 'BO-H95-GOLD',
@@ -232,6 +294,10 @@ const INITIAL_PRODUCTS: SeedProductDefinition[] = [
             'STUDIO CONNECTIVITY: Three Thunderbolt 4 ports, HDMI 2.1, SDXC card slot and MagSafe 3.',
         ].join('\n'),
         mainImageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=900&q=80',
+        galleryImages: [
+            'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1611186871348-b1ce696e52c9?auto=format&fit=crop&w=900&q=80',
+        ],
         variants: [
             {
                 sku: 'MBP16-M3M-SB-1TB',
@@ -257,6 +323,10 @@ const INITIAL_PRODUCTS: SeedProductDefinition[] = [
             'TEMPEST 3D AUDIOTECH: Immersive spatial soundscapes across headphones and TV speakers.',
         ].join('\n'),
         mainImageUrl: 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=900&q=80',
+        galleryImages: [
+            'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1607853202273-797f1c22a38e?auto=format&fit=crop&w=900&q=80',
+        ],
         variants: [
             {
                 sku: 'PS5-PRO-2TB-WH',
@@ -282,6 +352,10 @@ const INITIAL_PRODUCTS: SeedProductDefinition[] = [
             'DUAL WIRELESS & TYPE-C: Connect up to 3 devices via Bluetooth 5.1 or 1000Hz wired USB-C.',
         ].join('\n'),
         mainImageUrl: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=900&q=80',
+        galleryImages: [
+            'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=900&q=80',
+            'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=900&q=80',
+        ],
         variants: [
             {
                 sku: 'KEY-Q1P-CB-RED',
@@ -315,13 +389,6 @@ async function seedCatalog(): Promise<void> {
             0
         );
 
-        if (existingCategories.length > 0 && totalExistingProducts > 0) {
-            console.log(
-                `El catálogo ya cuenta con ${existingCategories.length} categorías y ${totalExistingProducts} productos activos. Se omite inserción duplicada.`
-            );
-            return;
-        }
-
         const categoryMap = new Map<string, string>();
         for (const cat of existingCategories) {
             const catName = cat.name ?? cat.Name ?? '';
@@ -348,56 +415,251 @@ async function seedCatalog(): Promise<void> {
             console.log(`Categoría creada: ${categoryDef.name}`);
         }
 
-        let createdProductsCount = 0;
-        let createdVariantsCount = 0;
+        if (totalExistingProducts === 0) {
+            let createdProductsCount = 0;
+            let createdVariantsCount = 0;
 
-        for (const productDef of INITIAL_PRODUCTS) {
-            const categoryId = categoryMap.get(productDef.categoryName.toLowerCase());
-            if (!categoryId) continue;
+            for (const productDef of INITIAL_PRODUCTS) {
+                const categoryId = categoryMap.get(productDef.categoryName.toLowerCase());
+                if (!categoryId) continue;
 
-            const productId = crypto.randomUUID();
-            await pool
-                .request()
-                .input('p_id', sql.VarChar(36), productId)
-                .input('p_category_id', sql.VarChar(36), categoryId)
-                .input('p_name', sql.VarChar(200), productDef.name)
-                .input('p_description', sql.NVarChar(sql.MAX), productDef.description)
-                .input('p_main_image_url', sql.VarChar(500), productDef.mainImageUrl)
-                .input('p_user_id', sql.VarChar(36), null)
-                .execute('SP_Productos_CrearProducto');
-
-            createdProductsCount += 1;
-
-            for (const variantDef of productDef.variants) {
-                const variantId = crypto.randomUUID();
+                const productId = crypto.randomUUID();
                 await pool
                     .request()
-                    .input('p_id', sql.VarChar(36), variantId)
-                    .input('p_product_id', sql.VarChar(36), productId)
-                    .input('p_sku', sql.VarChar(60), variantDef.sku)
-                    .input(
-                        'p_attributes',
-                        sql.NVarChar(sql.MAX),
-                        JSON.stringify(variantDef.attributes)
-                    )
-                    .input('p_price', sql.Decimal(12, 2), variantDef.price)
-                    .input('p_stock_physical', sql.Int, variantDef.stockPhysical)
+                    .input('p_id', sql.VarChar(36), productId)
+                    .input('p_category_id', sql.VarChar(36), categoryId)
+                    .input('p_name', sql.VarChar(200), productDef.name)
+                    .input('p_description', sql.NVarChar(sql.MAX), productDef.description)
+                    .input('p_main_image_url', sql.VarChar(500), productDef.mainImageUrl)
                     .input('p_user_id', sql.VarChar(36), null)
-                    .execute('SP_Productos_CrearVariante');
+                    .execute('SP_Productos_CrearProducto');
 
-                createdVariantsCount += 1;
+                if (productDef.galleryImages.length > 0) {
+                    const imagesPayload = productDef.galleryImages.map((url, idx) => ({
+                        imageUrl: url,
+                        sortOrder: idx,
+                        isCover: idx === 0,
+                    }));
+
+                    await pool
+                        .request()
+                        .input('p_product_id', sql.VarChar(36), productId)
+                        .input('p_images_json', sql.NVarChar(sql.MAX), JSON.stringify(imagesPayload))
+                        .execute('SP_Productos_SincronizarImagenes');
+                }
+
+                createdProductsCount += 1;
+
+                for (const variantDef of productDef.variants) {
+                    const variantId = crypto.randomUUID();
+                    await pool
+                        .request()
+                        .input('p_id', sql.VarChar(36), variantId)
+                        .input('p_product_id', sql.VarChar(36), productId)
+                        .input('p_sku', sql.VarChar(60), variantDef.sku)
+                        .input(
+                            'p_attributes',
+                            sql.NVarChar(sql.MAX),
+                            JSON.stringify(variantDef.attributes)
+                        )
+                        .input('p_price', sql.Decimal(12, 2), variantDef.price)
+                        .input('p_stock_physical', sql.Int, variantDef.stockPhysical)
+                        .input('p_user_id', sql.VarChar(36), null)
+                        .execute('SP_Productos_CrearVariante');
+
+                    createdVariantsCount += 1;
+                }
             }
+
+            console.log(
+                `Catálogo inicial sembrado exitosamente: ${createdProductsCount} productos multi-imagen y ${createdVariantsCount} variantes con Kardex inicial.`
+            );
+        } else {
+            console.log(
+                `El catálogo ya cuenta con ${existingCategories.length} categorías y ${totalExistingProducts} productos activos. Se omite inserción duplicada de productos.`
+            );
         }
 
-        console.log(
-            `Catálogo inicial sembrado exitosamente: ${createdProductsCount} productos y ${createdVariantsCount} variantes con Kardex inicial.`
+        // ── 2. Seed de 3 Cupones Promocionales de Demostración (RF-05) ───────────────────
+        const existingCouponsRes = await pool
+            .request()
+            .input('p_page', sql.Int, 1)
+            .input('p_limit', sql.Int, 100)
+            .input('p_q', sql.NVarChar(100), null)
+            .execute<SeedCouponRow>('SP_Cupones_Listar');
+
+        const existingCouponCodes = new Set(
+            (existingCouponsRes.recordset ?? []).map((c) => c.code.toUpperCase())
         );
+
+        const startsAt = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        const expiresAt = new Date(Date.now() + 180 * 24 * 60 * 60 * 1000);
+        const computersCatId = categoryMap.get('computers & laptop') ?? null;
+
+        const demoCoupons = [
+            {
+                code: 'BIENVENIDA10',
+                discountType: 'PORCENTAJE',
+                discountValue: 10.0,
+                minOrderAmount: 500.0,
+                maxUses: 100,
+                maxUsesPerClient: 2,
+                categoryId: null,
+            },
+            {
+                code: 'QUETZAL150',
+                discountType: 'MONTO_FIJO',
+                discountValue: 150.0,
+                minOrderAmount: 1000.0,
+                maxUses: 50,
+                maxUsesPerClient: 1,
+                categoryId: null,
+            },
+            {
+                code: 'TECH15',
+                discountType: 'PORCENTAJE',
+                discountValue: 15.0,
+                minOrderAmount: 1500.0,
+                maxUses: 30,
+                maxUsesPerClient: 1,
+                categoryId: computersCatId,
+            },
+        ];
+
+        for (const coupon of demoCoupons) {
+            if (existingCouponCodes.has(coupon.code)) continue;
+
+            await pool
+                .request()
+                .input('p_id', sql.VarChar(36), crypto.randomUUID())
+                .input('p_code', sql.VarChar(50), coupon.code)
+                .input('p_discount_type', sql.VarChar(20), coupon.discountType)
+                .input('p_discount_value', sql.Decimal(12, 2), coupon.discountValue)
+                .input('p_min_order_amount', sql.Decimal(12, 2), coupon.minOrderAmount)
+                .input('p_max_uses', sql.Int, coupon.maxUses)
+                .input('p_max_uses_per_client', sql.Int, coupon.maxUsesPerClient)
+                .input('p_category_id', sql.VarChar(36), coupon.categoryId)
+                .input('p_starts_at', sql.DateTime2, startsAt)
+                .input('p_expires_at', sql.DateTime2, expiresAt)
+                .input('p_user_id', sql.VarChar(36), null)
+                .execute('SP_Cupones_Crear');
+
+            console.log(`Cupón promocional creado: ${coupon.code}`);
+        }
+
+        // ── 3. Seed de Dirección de Entrega y Pedido de Ejemplo para cliente@shopcart.com ──
+        const clientEmail = process.env.SEED_CLIENT_EMAIL || 'cliente@shopcart.com';
+        const clientUserRes = await pool
+            .request()
+            .input('p_email', sql.VarChar(255), clientEmail)
+            .execute<SeedUserRow>('SP_Usuarios_ObtenerPorEmail');
+
+        const clientUser = clientUserRes.recordset?.[0];
+
+        if (clientUser) {
+            const addressesRes = await pool
+                .request()
+                .input('p_user_id', sql.VarChar(36), clientUser.id)
+                .execute<SeedAddressRow>('SP_Direcciones_ListarPorUsuario');
+
+            let addressId = addressesRes.recordset?.[0]?.id;
+
+            if (!addressId) {
+                const newAddrId = crypto.randomUUID();
+                const createdAddrRes = await pool
+                    .request()
+                    .input('p_id', sql.VarChar(36), newAddrId)
+                    .input('p_user_id', sql.VarChar(36), clientUser.id)
+                    .input('p_title', sql.VarChar(50), 'Casa Principal')
+                    .input('p_recipient_name', sql.VarChar(150), 'María Cliente Demo')
+                    .input('p_phone', sql.VarChar(20), '+502 5555-0199')
+                    .input('p_street_address', sql.VarChar(255), 'Avenida Reforma 12-01, Zona 10, Edificio Reforma Montúfar')
+                    .input('p_city', sql.VarChar(100), 'Ciudad de Guatemala')
+                    .input('p_state', sql.VarChar(100), 'Guatemala')
+                    .input('p_postal_code', sql.VarChar(20), '01010')
+                    .input('p_is_default', sql.Bit, 1)
+                    .execute<SeedAddressRow>('SP_Direcciones_Crear');
+
+                addressId = createdAddrRes.recordset?.[0]?.id ?? newAddrId;
+                console.log(`Dirección de envío predeterminada creada para ${clientEmail}.`);
+            }
+
+            const existingOrdersRes = await pool
+                .request()
+                .input('p_page', sql.Int, 1)
+                .input('p_limit', sql.Int, 5)
+                .input('p_user_id', sql.VarChar(36), null)
+                .input('p_status', sql.VarChar(30), null)
+                .input('p_q', sql.NVarChar(100), null)
+                .input('p_date_from', sql.DateTime2, null)
+                .input('p_date_to', sql.DateTime2, null)
+                .execute<SeedOrderRow>('SP_Pedidos_Listar');
+
+            const existingOrdersCount = existingOrdersRes.recordset?.length ?? 0;
+
+            if (existingOrdersCount === 0 && addressId) {
+                const catalogRes = await pool
+                    .request()
+                    .input('p_page', sql.Int, 1)
+                    .input('p_limit', sql.Int, 5)
+                    .input('p_q', sql.NVarChar(100), null)
+                    .input('p_category_id', sql.VarChar(36), null)
+                    .input('p_min_price', sql.Decimal(12, 2), null)
+                    .input('p_max_price', sql.Decimal(12, 2), null)
+                    .input('p_sort_by', sql.VarChar(30), 'latest')
+                    .input('p_in_stock', sql.Bit, 1)
+                    .execute<SeedCatalogProductRow | SeedCatalogVariantRow>('SP_Productos_ListarCatalogo');
+
+                const recordsets = catalogRes.recordsets as unknown as [
+                    SeedCatalogProductRow[],
+                    SeedCatalogVariantRow[]
+                ];
+                const variants = recordsets?.[1] ?? [];
+                const firstVariant = variants[0];
+
+                if (firstVariant) {
+                    const cartRes = await pool
+                        .request()
+                        .input('p_user_id', sql.VarChar(36), clientUser.id)
+                        .input('p_guest_token', sql.VarChar(255), null)
+                        .execute<SeedCartRow>('SP_Carritos_ObtenerOcrear');
+
+                    const cartId = cartRes.recordset?.[0]?.id;
+
+                    if (cartId) {
+                        await pool
+                            .request()
+                            .input('p_cart_id', sql.VarChar(36), cartId)
+                            .input('p_variant_id', sql.VarChar(36), firstVariant.id)
+                            .input('p_quantity', sql.Int, 1)
+                            .execute('SP_Carritos_AgregarOActualizarItem');
+
+                        const demoOrderId = crypto.randomUUID();
+                        const demoOrderNumber = 'ORD-DEMO-001';
+
+                        await pool
+                            .request()
+                            .input('p_order_id', sql.VarChar(36), demoOrderId)
+                            .input('p_order_number', sql.VarChar(30), demoOrderNumber)
+                            .input('p_user_id', sql.VarChar(36), clientUser.id)
+                            .input('p_address_id', sql.VarChar(36), addressId)
+                            .input('p_coupon_code', sql.VarChar(50), 'BIENVENIDA10')
+                            .input('p_idempotency_key', sql.VarChar(100), 'seed-demo-order-001')
+                            .execute('SP_Pedidos_CrearCheckoutAtomico');
+
+                        console.log(
+                            `Pedido inicial de demostración (${demoOrderNumber}) creado exitosamente para ${clientEmail}.`
+                        );
+                    }
+                }
+            }
+        }
     } finally {
         await closePool();
     }
 }
 
 seedCatalog().catch((error: unknown) => {
-    console.error('Error al ejecutar el seed de catálogo:', error);
+    console.error('Error al ejecutar el seed de catálogo, cupones y pedidos:', error);
     process.exitCode = 1;
 });
