@@ -5,6 +5,8 @@ import {
     GroupOutlined,
     PersonOutlineOutlined,
     LoyaltyOutlined,
+    LocalShippingOutlined,
+    ReceiptLongOutlined,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -36,8 +38,15 @@ const MenuItems: MenuItem[] = [
 
     { group: 'Gestión Comercial', roles: ['Administrador', 'Operador'] },
     {
+        module: 'Orders',
+        name: 'Pedidos y Despachos',
+        icon: LocalShippingOutlined,
+        link: '/orders',
+        roles: ['Administrador', 'Operador'],
+    },
+    {
         module: 'Products',
-        name: 'Productos y Variantes',
+        name: 'Productos, Inventario y Kardex',
         icon: Inventory2Outlined,
         link: '/products',
         roles: ['Administrador', 'Operador'],
@@ -60,6 +69,13 @@ const MenuItems: MenuItem[] = [
     },
 
     { group: 'Cuenta', requiresAuth: true },
+    {
+        module: 'MyOrders',
+        name: 'Mis Pedidos',
+        icon: ReceiptLongOutlined,
+        link: '/my-orders',
+        requiresAuth: true,
+    },
     {
         module: 'Profile',
         name: 'Mi Perfil',

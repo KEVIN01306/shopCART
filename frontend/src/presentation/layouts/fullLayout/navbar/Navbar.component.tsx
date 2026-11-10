@@ -27,6 +27,8 @@ import {
     Inventory2Outlined,
     StorefrontOutlined,
     GroupOutlined,
+    LocalShippingOutlined,
+    ReceiptLongOutlined,
 } from '@mui/icons-material';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { hasSomeRole, hasRole } from '../../../../core/utils/permissions';
@@ -241,6 +243,48 @@ export const Navbar: React.FC = () => {
                         Shop
                     </Button>
 
+                    {user && (
+                        <Button
+                            onClick={() => navigate('/my-orders')}
+                            startIcon={<ReceiptLongOutlined sx={{ fontSize: 17 }} />}
+                            sx={{
+                                color: location.pathname.startsWith('/my-orders')
+                                    ? '#FD9636'
+                                    : '#425A8B',
+                                fontWeight: 700,
+                                fontSize: '13.5px',
+                                textTransform: 'none',
+                                '&:hover': {
+                                    color: '#FD9636',
+                                    backgroundColor: '#F0F3F8',
+                                },
+                            }}
+                        >
+                            Mis Pedidos
+                        </Button>
+                    )}
+
+                    {canManageProducts && (
+                        <Button
+                            onClick={() => navigate('/orders')}
+                            startIcon={<LocalShippingOutlined sx={{ fontSize: 17 }} />}
+                            sx={{
+                                color: location.pathname.startsWith('/orders')
+                                    ? '#FD9636'
+                                    : '#425A8B',
+                                fontWeight: 700,
+                                fontSize: '13.5px',
+                                textTransform: 'none',
+                                '&:hover': {
+                                    color: '#FD9636',
+                                    backgroundColor: '#F0F3F8',
+                                },
+                            }}
+                        >
+                            Pedidos y Despachos
+                        </Button>
+                    )}
+
                     {canManageProducts && (
                         <Button
                             onClick={() => navigate('/products')}
@@ -388,6 +432,44 @@ export const Navbar: React.FC = () => {
                             </Box>
 
                             <Divider sx={{ borderColor: '#E5E9F2' }} />
+
+                            <MenuItem
+                                onClick={() => {
+                                    handleCloseMenu();
+                                    navigate('/my-orders');
+                                }}
+                                sx={{ py: 1, gap: 1.5 }}
+                            >
+                                <ListItemIcon sx={{ color: '#425A8B', minWidth: 0 }}>
+                                    <ReceiptLongOutlined fontSize="small" />
+                                </ListItemIcon>
+                                <Typography sx={{ color: '#425A8B', fontSize: '13px', fontWeight: 600 }}>
+                                    Mis Pedidos
+                                </Typography>
+                            </MenuItem>
+
+                            {canManageProducts && (
+                                <MenuItem
+                                    onClick={() => {
+                                        handleCloseMenu();
+                                        navigate('/orders');
+                                    }}
+                                    sx={{ py: 1, gap: 1.5 }}
+                                >
+                                    <ListItemIcon sx={{ color: '#FD9636', minWidth: 0 }}>
+                                        <LocalShippingOutlined fontSize="small" />
+                                    </ListItemIcon>
+                                    <Typography
+                                        sx={{
+                                            color: '#425A8B',
+                                            fontSize: '13px',
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        Pedidos y Despachos
+                                    </Typography>
+                                </MenuItem>
+                            )}
 
                             {canManageProducts && (
                                 <MenuItem

@@ -34,6 +34,7 @@ import {
     LoyaltyOutlined,
 } from '@mui/icons-material';
 import { useCartStore } from '../../../../core/store/cartStore';
+import { useAuthStore } from '../../../../core/store/authStore';
 import { validateCouponCode } from '../../../coupons/infrastructure/services/coupons.service';
 
 const FREE_SHIPPING_THRESHOLD = 300;
@@ -41,6 +42,7 @@ const STANDARD_SHIPPING_COST = 25;
 
 export const CartPage: React.FC = () => {
     const navigate = useNavigate();
+    const { user } = useAuthStore();
     const {
         items,
         guestToken,
@@ -162,9 +164,11 @@ export const CartPage: React.FC = () => {
     };
 
     const handleProceedToCheckout = () => {
-        // En una tienda real llevaría a la pantalla de Checkout o pasarela
-        // Aquí mostramos confirmación o preparamos la orden
-        navigate('/shop');
+        if (!user) {
+            navigate('/auth/login');
+            return;
+        }
+        navigate('/checkout');
     };
 
     return (

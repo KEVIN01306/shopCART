@@ -6,6 +6,11 @@ import { profileRoutes } from '../../modules/profile/presentation/profile.routes
 import { shopRoutes } from '../../modules/shop/presentation/shop.routes';
 import { productsRoutes } from '../../modules/products/presentation/products.routes';
 import { couponsRoutes } from '../../modules/coupons/presentation/coupons.routes';
+import { ordersRoutes } from '../../modules/orders/presentation/orders.routes';
+import {
+    CheckoutPage,
+    MyOrdersPage,
+} from '../../modules/orders/presentation/orders.lazy';
 import { ShopCatalogPage } from '../../modules/shop/presentation/shop.lazy';
 import { CartPage } from '../../modules/cart/presentation/cart.lazy';
 import ProtectedRoute from './ProtectedRoute';
@@ -61,6 +66,18 @@ export const appRouter = createBrowserRouter([
             {
                 element: <ProtectedRoute />,
                 children: [
+                    {
+                        path: 'checkout',
+                        element: <CheckoutPage />,
+                    },
+                    {
+                        path: 'my-orders',
+                        element: <MyOrdersPage />,
+                    },
+                    {
+                        path: 'orders',
+                        children: [...ordersRoutes],
+                    },
                     {
                         path: 'products',
                         children: [...productsRoutes],
