@@ -36,6 +36,8 @@ import {
     updateAdminProduct,
     createAdminCategory,
 } from '../../infrastructure/services/products-admin.service';
+import { ImageUploadOrUrl } from '../../../../shared/components/ImageUploadOrUrl';
+import { GalleryImageAdder } from '../../../../shared/components/GalleryImageAdder';
 
 interface ProductFormDialogProps {
     open: boolean;
@@ -69,7 +71,6 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
 
     // Additional Gallery Image URLs
     const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
-    const [newGalleryUrl, setNewGalleryUrl] = useState<string>('');
 
     const {
         control,
@@ -157,7 +158,6 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                 (u) => u && u !== initialData.mainImageUrl,
             );
             setGalleryUrls(extraImages);
-            setNewGalleryUrl('');
         } else {
             reset({
                 categoryId: categories[0]?.id || '',
@@ -180,18 +180,8 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                 ],
             });
             setGalleryUrls([]);
-            setNewGalleryUrl('');
         }
     }, [open, initialData, categories, reset]);
-
-    const handleAddGalleryUrl = () => {
-        const trimmed = newGalleryUrl.trim();
-        if (!trimmed || !trimmed.startsWith('http')) return;
-        if (!galleryUrls.includes(trimmed)) {
-            setGalleryUrls((prev) => [...prev, trimmed]);
-        }
-        setNewGalleryUrl('');
-    };
 
     const handleRemoveGalleryUrl = (urlToRemove: string) => {
         setGalleryUrls((prev) => prev.filter((u) => u !== urlToRemove));
@@ -493,13 +483,10 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                                         name="mainImageUrl"
                                         control={control}
                                         render={({ field }) => (
-                                            <TextField
-                                                {...field}
-                                                label="URL de Imagen Principal (HTTPS)"
-                                                placeholder="https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?w=800"
-                                                fullWidth
-                                                size="small"
-                                                error={Boolean(errors.mainImageUrl)}
+                                            <ImageUploadOrUrl
+                                                value={field.value}
+                                                onChange={field.onChange}
+                                                label="Imagen Principal (Portada)"
                                                 helperText={
                                                     errors.mainImageUrl?.message ||
                                                     'Se mostrará en las cards del catálogo y como portada principal.'
@@ -527,32 +514,13 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                                         >
                                             Galería de Imágenes Adicionales ({galleryUrls.length})
                                         </Typography>
-                                        <Stack direction="row" spacing={1} sx={{ mb: galleryUrls.length > 0 ? 1 : 0 }}>
-                                            <TextField
-                                                size="small"
-                                                fullWidth
-                                                placeholder="https://images.unsplash.com/..."
-                                                value={newGalleryUrl}
-                                                onChange={(e) => setNewGalleryUrl(e.target.value)}
-                                            />
-                                            <Button
-                                                type="button"
-                                                size="small"
-                                                onClick={handleAddGalleryUrl}
-                                                disabled={!newGalleryUrl.trim().startsWith('http')}
-                                                sx={{
-                                                    backgroundColor: '#425A8B',
-                                                    color: '#FFFFFF',
-                                                    fontWeight: 700,
-                                                    textTransform: 'none',
-                                                    px: 2,
-                                                    flexShrink: 0,
-                                                    '&:hover': { backgroundColor: '#2B3E66' },
-                                                }}
-                                            >
-                                                + Añadir URL
-                                            </Button>
-                                        </Stack>
+                                        <GalleryImageAdder
+                                            onAddImage={(url) => {
+                                                if (!galleryUrls.includes(url)) {
+                                                    setGalleryUrls([...galleryUrls, url]);
+                                                }
+                                            }}
+                                        />
                                         {galleryUrls.length > 0 && (
                                             <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
                                                 {galleryUrls.map((gUrl, idx) => (

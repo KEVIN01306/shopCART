@@ -84,8 +84,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
                         />
                     )}
                 />
-                {/* Opción temporalmente deshabilitada: recuperación de contraseña vía OTP */}
-                {/* <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: -0.5 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: -0.5 }}>
                     <Button
                         variant="text"
                         size="small"
@@ -94,7 +93,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
                     >
                         ¿Olvidaste tu contraseña?
                     </Button>
-                </Box> */}
+                </Box>
                 <Button
                     id="login-submit"
                     type="submit"

@@ -7,6 +7,7 @@ import CartRoutes from "@modules/Carts/presentation/carts.routes.js";
 import CouponsRoutes from "@modules/Coupons/presentation/coupons.routes.js";
 import OrdersRoutes from "@modules/Orders/presentation/orders.routes.js";
 import ReportsRoutes from "@modules/Reports/presentation/reports.routes.js";
+import UploadRoutes from "@modules/Upload/presentation/upload.routes.js";
 
 const router = Router();
 
@@ -17,6 +18,7 @@ router.use('/cart', CartRoutes);
 router.use('/coupons', CouponsRoutes);
 router.use('/orders', OrdersRoutes);
 router.use('/reports', ReportsRoutes);
+router.use('/upload', UploadRoutes);
 
 router.use(ErrorMiddleware);
 

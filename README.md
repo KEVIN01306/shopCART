@@ -63,6 +63,18 @@ JWT_AUD=shopcart-client
 JWT_ACCESS_TTL=15m
 JWT_REFRESH_TTL=7d
 
+# Almacenamiento en la Nube — Cloudflare R2 (Compatible con S3)
+R2_ACCOUNT_ID=056027f3aefdc9a701d3d18f741335d7
+R2_ACCESS_KEY_ID=048df850ed41b0f277fee0471954f639
+R2_SECRET_ACCESS_KEY=0a7ceed792716edc6129a6dd0e5325cf9f3b75a9b2f9900919e1a4dc87ee17a6
+R2_BUCKET_NAME=shop-cart
+R2_PUBLIC_URL=https://pub-bedd9aa284bb4854ba9efecbbbc8aefc.r2.dev
+R2_ENDPOINT=https://056027f3aefdc9a701d3d18f741335d7.r2.cloudflarestorage.com
+
+# Microservicio de Envío de Correos y Validación OTP
+OTP_PROVIDER=auth_live_1447fb5ba532cab8c45775ce5fb55a6b37646a4b0d88ce58
+OTP_URL=https://send-otp-shopcart.onrender.com/api/v1/
+
 # Cuentas Iniciales para Seeds
 SEED_ADMIN_EMAIL=kevin01306@gmail.com
 SEED_ADMIN_PASSWORD=12345678
@@ -71,6 +83,12 @@ SEED_OPERATOR_PASSWORD=12345678
 SEED_CLIENT_EMAIL=cliente@shopcart.com
 SEED_CLIENT_PASSWORD=12345678
 ```
+
+> [!NOTE]
+> **Almacenamiento en Cloudflare R2 y Servidor de Correos OTP**:
+> - **Cloudflare R2**: Se utiliza para el almacenamiento seguro de imágenes de productos y galerías sin costos de egress, conectándose mediante `@aws-sdk/client-s3`. En el frontend se provee selector dual (subir archivo directo a R2 o ingresar URL HTTPS externa).
+> - **Servidor OTP y Correos**: Se integra con el microservicio en Render para el envío de credenciales temporales a nuevos usuarios y recuperación de contraseñas.
+> - **Verificación de Correo Opcional**: La validación de correo por OTP es completamente opcional y no bloquea el uso de la tienda ni el checkout para los clientes.
 
 ### Variables de Entorno del Frontend (`frontend/.env`)
 Copia `frontend/.env.example` a `frontend/.env`:
@@ -515,6 +533,8 @@ stateDiagram-v2
 | **Librería de Componentes** | Material UI (MUI) | `^9.4.0` | Sistema de componentes accesibles y temables adaptados a la estética comercial Ecom Marketplace. |
 | **Gestión de Estado** | Zustand | `^5.0.15` | Estado global reactivo ligero y persistente en `localStorage` para sesión y sincronización del carrito. |
 | **Formularios Frontend** | React Hook Form | `^7.88.0` | Manejo de formularios de alto rendimiento sin re-renderizados innecesarios, acoplado con resolvers Zod. |
+| **Almacenamiento Cloud** | Cloudflare R2 | S3 API (`^3.1090.0`) | Almacenamiento seguro de objetos e imágenes sin costos de egress, con URLs públicas directas vía CDN. |
+| **Servicio de Correos y OTP** | Render Microservice | HTTP REST | Servidor externo para envío de credenciales temporales por correo y validación de códigos de un solo uso OTP. |
 
 ---
 
@@ -599,6 +619,11 @@ stateDiagram-v2
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/reports/dashboard` | `Administrador` | Retorna KPIs financieros en GTQ, ventas agrupadas (día/semana/mes), ventas por categoría y Top 10 productos. |
 | `GET` | `/api/reports/audit-logs` | `Administrador` | Consulta paginada y filtrable de la bitácora de auditoría inmutable de la plataforma. |
+
+### Módulo de Almacenamiento y Carga de Archivos (`/api/upload`)
+| Método | Ruta | Acceso | Descripción |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/upload/image` | `Admin`, `Operador` | Sube un archivo de imagen (JPEG, PNG, WEBP, GIF, AVIF, SVG hasta 10MB) a Cloudflare R2 y retorna su URL pública CDN. |
 
 ---
 

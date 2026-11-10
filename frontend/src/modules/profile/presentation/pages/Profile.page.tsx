@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-// import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -11,7 +11,7 @@ import {
     Tooltip,
     Alert,
     Snackbar,
-    // Button,
+    Button,
 } from '@mui/material';
 import {
     PersonOutlineOutlined,
@@ -25,7 +25,8 @@ import {
     MenuBookOutlined,
     FingerprintOutlined,
     Check,
-    // LockResetOutlined,
+    LockResetOutlined,
+    VerifiedUserOutlined,
 } from '@mui/icons-material';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { getCurrentUser } from '../../../auth/infrastructure/services/auth.service';
@@ -136,7 +137,7 @@ const SelineProfileCard: React.FC<{
 );
 
 export const ProfilePage: React.FC = () => {
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
     const { user: cachedUser, accessToken, setUser } = useAuthStore();
     const [profile, setProfile] = useState<AuthUser | null>(cachedUser);
     const [loading, setLoading] = useState(false);
@@ -442,8 +443,51 @@ export const ProfilePage: React.FC = () => {
                         />
                     }
                 />
-                {/* Botón de cambio/recuperación de contraseña deshabilitado temporalmente */}
-                {/* <ProfileRow
+                <ProfileRow
+                    icon={<VerifiedUserOutlined />}
+                    label="Verificación de Correo"
+                    value={
+                        displayUser.isVerify ? (
+                            <Chip
+                                icon={<CheckCircle fontSize="small" sx={{ color: '#10B981 !important' }} />}
+                                label="Correo Verificado"
+                                size="small"
+                                sx={{
+                                    bgcolor: '#ECFDF5',
+                                    border: '1px solid #A7F3D0',
+                                    color: '#065F46',
+                                    fontWeight: 600,
+                                    borderRadius: '9999px',
+                                }}
+                            />
+                        ) : (
+                            <Button
+                                id="profile-verify-email-btn"
+                                variant="outlined"
+                                size="small"
+                                startIcon={<EmailOutlined sx={{ fontSize: 16 }} />}
+                                onClick={() => navigate('/auth/verify-account')}
+                                sx={{
+                                    borderRadius: '9999px',
+                                    border: '1px solid #F59E0B',
+                                    color: '#B45309',
+                                    textTransform: 'none',
+                                    fontWeight: 600,
+                                    fontSize: '12px',
+                                    px: 2,
+                                    py: 0.5,
+                                    '&:hover': {
+                                        borderColor: '#D97706',
+                                        bgcolor: '#FFFBEB',
+                                    },
+                                }}
+                            >
+                                Verificar Correo (Opcional)
+                            </Button>
+                        )
+                    }
+                />
+                <ProfileRow
                     icon={<LockResetOutlined />}
                     label="Contraseña de Acceso"
                     value={
@@ -472,7 +516,7 @@ export const ProfilePage: React.FC = () => {
                             Cambiar contraseña
                         </Button>
                     }
-                /> */}
+                />
                 <ProfileRow
                     icon={<CalendarMonthOutlined />}
                     label="Miembro Desde"

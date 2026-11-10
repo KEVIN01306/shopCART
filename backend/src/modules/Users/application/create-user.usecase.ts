@@ -74,7 +74,8 @@ export class CreateUserUseCase {
             const emailResult = await this.emailProvider.sendWelcomeCredentialsEmail(
                 user.email,
                 fullName,
-                rawPassword
+                rawPassword,
+                "shopCART"
             );
 
             return {

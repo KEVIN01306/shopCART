@@ -62,7 +62,7 @@ export class HttpEmailProvider implements EmailProvider {
         to: string,
         name: string,
         tempPassword: string,
-        projectName: string = "Assets System - CAD Import Inc"
+        projectName: string = "shopCART"
     ): Promise<SendEmailResult> {
         const subject = `Tus credenciales de acceso - ${projectName}`;
         const htmlContent = `
