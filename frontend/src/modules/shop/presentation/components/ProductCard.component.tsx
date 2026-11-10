@@ -87,7 +87,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             ? product.minPrice
             : product.variants?.[0]?.price ?? 0;
 
-    const oldReferencePrice = displayPrice > 0 ? displayPrice * 1.18 : 0;
     const isOutOfStock = product.totalStockAvailable <= 0;
     const specBullets = extractSpecBullets(product);
 
@@ -139,23 +138,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         p: 1.5,
                     }}
                 >
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            top: 8,
-                            left: 8,
-                            backgroundColor: isOutOfStock ? '#EF4444' : '#FD9636',
-                            color: '#FFFFFF',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            px: 1.25,
-                            py: 0.35,
-                            borderRadius: '9999px',
-                            lineHeight: 1.2,
-                        }}
-                    >
-                        {isOutOfStock ? 'Agotado' : '-17%'}
-                    </Box>
+                    {isOutOfStock && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 8,
+                                left: 8,
+                                backgroundColor: '#EF4444',
+                                color: '#FFFFFF',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                px: 1.25,
+                                py: 0.35,
+                                borderRadius: '9999px',
+                                lineHeight: 1.2,
+                            }}
+                        >
+                            Agotado
+                        </Box>
+                    )}
                     <Box
                         component="img"
                         src={imageSrc}
@@ -248,18 +249,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         >
                             {formatMoney(displayPrice)}
                         </Typography>
-                        {oldReferencePrice > 0 && (
-                            <Typography
-                                sx={{
-                                    fontSize: '14px',
-                                    fontWeight: 500,
-                                    color: '#8C9EC5',
-                                    textDecoration: 'line-through',
-                                }}
-                            >
-                                {formatMoney(oldReferencePrice)}
-                            </Typography>
-                        )}
                     </Stack>
 
                     <Button
@@ -306,7 +295,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             }}
         >
             <Box>
-                {/* Image Wrapper + Top-Left Orange Badge (-17%) */}
+                {/* Image Wrapper */}
                 <Box
                     onClick={handleGoToDetail}
                     sx={{
@@ -322,24 +311,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         overflow: 'hidden',
                     }}
                 >
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            top: 2,
-                            left: 2,
-                            zIndex: 1,
-                            backgroundColor: isOutOfStock ? '#EF4444' : '#FD9636',
-                            color: '#FFFFFF',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            px: 1.25,
-                            py: 0.35,
-                            borderRadius: '9999px',
-                            lineHeight: 1.2,
-                        }}
-                    >
-                        {isOutOfStock ? 'Agotado' : '-17%'}
-                    </Box>
+                    {isOutOfStock && (
+                        <Box
+                            sx={{
+                                position: 'absolute',
+                                top: 2,
+                                left: 2,
+                                zIndex: 1,
+                                backgroundColor: '#EF4444',
+                                color: '#FFFFFF',
+                                fontSize: '11px',
+                                fontWeight: 700,
+                                px: 1.25,
+                                py: 0.35,
+                                borderRadius: '9999px',
+                                lineHeight: 1.2,
+                            }}
+                        >
+                            Agotado
+                        </Box>
+                    )}
 
                     <Box
                         component="img"
@@ -412,7 +403,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     </Typography>
                 </Stack>
 
-                {/* Price Block: Main Price in #425A8B + Strikethrough Reference in #8C9EC5 */}
+                {/* Price Block: Main Price in #425A8B */}
                 <Stack
                     direction="row"
                     spacing={1}
@@ -428,19 +419,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     >
                         {formatMoney(displayPrice)}
                     </Typography>
-
-                    {oldReferencePrice > 0 && (
-                        <Typography
-                            sx={{
-                                fontSize: '14px',
-                                fontWeight: 500,
-                                color: '#8C9EC5',
-                                textDecoration: 'line-through',
-                            }}
-                        >
-                            {formatMoney(oldReferencePrice)}
-                        </Typography>
-                    )}
                 </Stack>
 
                 {/* Full-Width Outlined Add To Cart Button */}

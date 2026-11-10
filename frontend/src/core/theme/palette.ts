@@ -5,7 +5,7 @@ import type { PaletteOptions } from '@mui/material/styles';
  *
  * Reglas clave:
  * - Primary Navy / Slate (#425A8B): Títulos de productos, encabezados, precios principales, bordes de botones Add To Cart y navegación.
- * - Secondary / Accent Orange (#FD9636): Badges de descuento (-17%), estrellas de calificación (★★★★★), slider de rango de precio, checkboxes activos, bordes de variante seleccionada (Color, Style, Size).
+ * - Secondary / Accent Orange (#FD9636): Estrellas de calificación (★★★★★), slider de rango de precio, checkboxes activos, bordes de variante seleccionada (Color, Style, Size).
  * - Superficies: Fondo general #F8FAFC / #FFFFFF, barra de breadcrumbs y badges de conteo en #F0F3F8, tarjetas en #FFFFFF con borde 1px solid #D5DFE4.
  * - Texto: Primario en #425A8B, secundario en #66789C, terciario/tachado en #8C9EC5.
  */

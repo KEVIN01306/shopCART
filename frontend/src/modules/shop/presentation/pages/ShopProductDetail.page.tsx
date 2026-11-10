@@ -324,7 +324,7 @@ export const ShopProductDetailPage: React.FC = () => {
     }
 
     const currentPrice = selectedVariant?.price ?? product.minPrice ?? 0;
-    const oldPrice = currentPrice > 0 ? currentPrice * 1.13 : 0;
+    const isOutOfStock = selectedVariant ? selectedVariant.stockAvailable <= 0 : product.totalStockAvailable <= 0;
     const specList = extractTwoColumnSpecs(product, selectedVariant);
     const activeThumb = galleryThumbnails[activeThumbIndex] || galleryThumbnails[0];
 
@@ -478,7 +478,7 @@ export const ShopProductDetailPage: React.FC = () => {
                         })}
                     </Stack>
 
-                    {/* Large Main Image Container (border 1px solid #D5DFE4, radius 10px, badge -17%) */}
+                    {/* Large Main Image Container (border 1px solid #D5DFE4, radius 10px) */}
                     <Box
                         sx={{
                             position: 'relative',
@@ -494,23 +494,25 @@ export const ShopProductDetailPage: React.FC = () => {
                             overflow: 'hidden',
                         }}
                     >
-                        <Box
-                            sx={{
-                                position: 'absolute',
-                                top: 16,
-                                left: 16,
-                                zIndex: 1,
-                                backgroundColor: '#FD9636',
-                                color: '#FFFFFF',
-                                fontSize: '12px',
-                                fontWeight: 700,
-                                px: 1.5,
-                                py: 0.45,
-                                borderRadius: '9999px',
-                            }}
-                        >
-                            -17%
-                        </Box>
+                        {isOutOfStock && (
+                            <Box
+                                sx={{
+                                    position: 'absolute',
+                                    top: 16,
+                                    left: 16,
+                                    zIndex: 1,
+                                    backgroundColor: '#EF4444',
+                                    color: '#FFFFFF',
+                                    fontSize: '12px',
+                                    fontWeight: 700,
+                                    px: 1.5,
+                                    py: 0.45,
+                                    borderRadius: '9999px',
+                                }}
+                            >
+                                Agotado
+                            </Box>
+                        )}
 
                         <Box
                             component="img"
@@ -682,18 +684,6 @@ export const ShopProductDetailPage: React.FC = () => {
                             >
                                 {formatMoney(currentPrice)}
                             </Typography>
-                            {oldPrice > 0 && (
-                                <Typography
-                                    sx={{
-                                        fontSize: '20px',
-                                        fontWeight: 500,
-                                        color: '#8C9EC5',
-                                        textDecoration: 'line-through',
-                                    }}
-                                >
-                                    {formatMoney(oldPrice)}
-                                </Typography>
-                            )}
                         </Stack>
 
                         {selectedVariant && (
