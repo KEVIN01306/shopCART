@@ -7,6 +7,8 @@ import {
     LoyaltyOutlined,
     LocalShippingOutlined,
     ReceiptLongOutlined,
+    AssessmentOutlined,
+    FactCheckOutlined,
 } from '@mui/icons-material';
 import type { ElementType } from 'react';
 
@@ -53,6 +55,20 @@ const MenuItems: MenuItem[] = [
     },
 
     { group: 'Administración', roles: ['Administrador'] },
+    {
+        module: 'Dashboard',
+        name: 'Dashboard y Reportes',
+        icon: AssessmentOutlined,
+        link: '/dashboard',
+        roles: ['Administrador'],
+    },
+    {
+        module: 'AuditLogs',
+        name: 'Bitácora de Auditoría',
+        icon: FactCheckOutlined,
+        link: '/audit-logs',
+        roles: ['Administrador'],
+    },
     {
         module: 'Coupons',
         name: 'Cupones y Promociones',

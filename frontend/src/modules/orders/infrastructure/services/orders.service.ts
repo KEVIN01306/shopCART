@@ -84,6 +84,8 @@ export const getAllOrdersPaginated = async (params?: {
     limit?: number;
     status?: string;
     q?: string;
+    dateFrom?: string;
+    dateTo?: string;
 }): Promise<PaginatedOrdersResponse> => {
     const res = await api.get<ApiResponse<OrderSummaryDto[]>>('/orders', {
         params,

@@ -8,6 +8,10 @@ import { productsRoutes } from '../../modules/products/presentation/products.rou
 import { couponsRoutes } from '../../modules/coupons/presentation/coupons.routes';
 import { ordersRoutes } from '../../modules/orders/presentation/orders.routes';
 import {
+    dashboardRoutes,
+    auditLogsRoutes,
+} from '../../modules/reports/presentation/reports.routes';
+import {
     CheckoutPage,
     MyOrdersPage,
 } from '../../modules/orders/presentation/orders.lazy';
@@ -85,6 +89,14 @@ export const appRouter = createBrowserRouter([
                     {
                         path: 'coupons',
                         children: [...couponsRoutes],
+                    },
+                    {
+                        path: 'dashboard',
+                        children: [...dashboardRoutes],
+                    },
+                    {
+                        path: 'audit-logs',
+                        children: [...auditLogsRoutes],
                     },
                     {
                         path: 'users',

@@ -29,6 +29,7 @@ import {
     GroupOutlined,
     LocalShippingOutlined,
     ReceiptLongOutlined,
+    AssessmentOutlined,
 } from '@mui/icons-material';
 import { useAuthStore } from '../../../../core/store/authStore';
 import { hasSomeRole, hasRole } from '../../../../core/utils/permissions';
@@ -303,6 +304,27 @@ export const Navbar: React.FC = () => {
                             }}
                         >
                             Subir / Editar Productos
+                        </Button>
+                    )}
+
+                    {isAdminUser && (
+                        <Button
+                            onClick={() => navigate('/dashboard')}
+                            startIcon={<AssessmentOutlined sx={{ fontSize: 17 }} />}
+                            sx={{
+                                color: location.pathname.startsWith('/dashboard')
+                                    ? '#FD9636'
+                                    : '#425A8B',
+                                fontWeight: 700,
+                                fontSize: '13.5px',
+                                textTransform: 'none',
+                                '&:hover': {
+                                    color: '#FD9636',
+                                    backgroundColor: '#F0F3F8',
+                                },
+                            }}
+                        >
+                            Dashboard
                         </Button>
                     )}
 
