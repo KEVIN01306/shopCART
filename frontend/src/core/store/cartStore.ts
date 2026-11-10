@@ -207,7 +207,21 @@ export const useCartStore = create<CartState>()(
                     const guestToken = get().guestToken;
                     const cart: CartDto = await fetchRemoteCart(guestToken);
                     if (cart && Array.isArray(cart.items)) {
-                        set({ items: cart.items.map(mapDtoToCartItem) });
+                        if (cart.items.length > 0) {
+                            set({ items: cart.items.map(mapDtoToCartItem) });
+                        } else if (get().items.length > 0) {
+                            for (const localItem of get().items) {
+                                try {
+                                    await addRemoteCartItem(localItem.variantId, localItem.quantity, guestToken);
+                                } catch (e) {
+                                    console.warn('[CartStore] Re-sync item warning:', e);
+                                }
+                            }
+                            const refreshed = await fetchRemoteCart(guestToken);
+                            if (refreshed && Array.isArray(refreshed.items) && refreshed.items.length > 0) {
+                                set({ items: refreshed.items.map(mapDtoToCartItem) });
+                            }
+                        }
                     }
                 } catch (err) {
                     console.warn('[CartStore] Backend fetchCart warning, using local cache:', err);
@@ -218,14 +232,17 @@ export const useCartStore = create<CartState>()(
 
             syncOnAuth: async () => {
                 const guestToken = get().guestToken;
-                if (!guestToken) return;
-
                 set({ isLoading: true });
                 try {
-                    const syncedCart: CartDto = await syncGuestCart(guestToken);
-                    if (syncedCart && Array.isArray(syncedCart.items)) {
-                        set({ items: syncedCart.items.map(mapDtoToCartItem) });
+                    if (guestToken) {
+                        const syncedCart: CartDto = await syncGuestCart(guestToken);
+                        if (syncedCart && Array.isArray(syncedCart.items) && syncedCart.items.length > 0) {
+                            set({ items: syncedCart.items.map(mapDtoToCartItem) });
+                            set({ guestToken: generateGuestToken() });
+                            return;
+                        }
                     }
+                    await get().fetchCart();
                     set({ guestToken: generateGuestToken() });
                 } catch (err) {
                     console.warn('[CartStore] Cart sync on auth failed, falling back to fetchCart:', err);

@@ -12,7 +12,7 @@ import { AddressManagerSection } from '../components/AddressManagerSection';
 
 export const CheckoutPage: React.FC = () => {
     const navigate = useNavigate();
-    const { items, appliedCoupon, clearCart } = useCartStore();
+    const { items, appliedCoupon, clearCart, fetchCart } = useCartStore();
     const [addresses, setAddresses] = useState<ShippingAddressDto[]>([]);
     const [selectedAddressId, setSelectedAddressId] = useState<string>('');
     const [expiresAt, setExpiresAt] = useState<Date | null>(null);
@@ -29,16 +29,22 @@ export const CheckoutPage: React.FC = () => {
 
     useEffect(() => {
         if (items.length === 0) return;
-        Promise.all([getMyAddresses(), reserveCheckoutStock()])
-            .then(([addrs, reservation]) => {
+        let isMounted = true;
+        const initCheckout = async () => {
+            try {
+                await fetchCart();
+                const [addrs, reservation] = await Promise.all([getMyAddresses(), reserveCheckoutStock()]);
+                if (!isMounted) return;
                 setAddresses(addrs);
                 const def = addrs.find((a) => a.isDefault) || addrs[0];
                 if (def) setSelectedAddressId(def.id);
                 if (reservation?.expiresAt) setExpiresAt(new Date(reservation.expiresAt));
-            })
-            .catch((err: unknown) => {
-                setError((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Error al reservar existencias de tu carrito.');
-            });
+            } catch (err: unknown) {
+                if (isMounted) setError((err as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Error al reservar existencias de tu carrito.');
+            }
+        };
+        initCheckout();
+        return () => { isMounted = false; };
     }, [items.length]);
 
     useEffect(() => {
