@@ -45,7 +45,18 @@ export const productFormSchema = z.object({
     isActive: z.boolean(),
     variants: z
         .array(variantFormItemSchema)
-        .min(1, 'Debe registrar al menos una variante para el producto'),
+        .min(1, 'Debe registrar al menos una variante para el producto')
+        .refine(
+            (variants) => {
+                const skus = variants
+                    .map((v) => v.sku.toLowerCase().trim())
+                    .filter(Boolean);
+                return new Set(skus).size === skus.length;
+            },
+            {
+                message: 'No puedes repetir el mismo SKU en dos o más variantes',
+            }
+        ),
 });
 
 export type ProductFormValues = z.infer<typeof productFormSchema>;

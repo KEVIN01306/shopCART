@@ -36,6 +36,7 @@ export interface IProductsRepository {
     createProduct(data: CreateProductInput): Promise<Product>;
     updateProduct(id: string, data: UpdateProductInput): Promise<Product>;
     toggleProductStatus(id: string, isActive: boolean, userId?: string | null): Promise<Product>;
+    deleteProduct(id: string, userId?: string | null): Promise<void>;
 
     // Variantes y Kardex
     createVariant(productId: string, data: CreateProductVariantInput): Promise<ProductVariant>;

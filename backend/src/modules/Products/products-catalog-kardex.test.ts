@@ -376,6 +376,29 @@ function createMockCatalogMssqlPool() {
                             };
                         }
 
+                        case "SP_Productos_EliminarProductoPorFallo": {
+                            const pId = inputs.p_id;
+                            for (const [vId, v] of Array.from(variants.entries())) {
+                                if (v.product_id === pId) {
+                                    variants.delete(vId);
+                                }
+                            }
+                            products.delete(pId);
+                            return { recordset: [] };
+                        }
+
+                        case "SP_Productos_ListarAdmin": {
+                            const q = inputs.p_q ? String(inputs.p_q).toLowerCase() : null;
+                            const list = Array.from(products.values()).filter((p) => {
+                                if (q && !p.name.toLowerCase().includes(q)) return false;
+                                return true;
+                            });
+                            return {
+                                recordset: list,
+                                recordsets: [list, Array.from(variants.values())],
+                            };
+                        }
+
                         default:
                             throw new Error(`Unexpected SP call: ${spName}`);
                     }
@@ -569,11 +592,51 @@ async function runProductsCatalogKardexTests() {
         "Soft-deleted product must return 404 in public catalog"
     );
     console.log(
-        "✅ [7/7] Product soft-delete hides product from public storefront."
+        "✅ [7/8] Product soft-delete hides product from public storefront."
+    );
+
+    // 8. Rollback and Delete Product when Variant Creation Fails (e.g. duplicate SKU)
+    let duplicateSkuBlocked = false;
+    const existingSku = targetVariant.sku;
+    try {
+        await createProductUseCase.execute({
+            name: "Producto con SKU duplicado",
+            categoryId: category.id,
+            description: "Este producto debe eliminarse automáticamente al fallar",
+            variants: [
+                {
+                    sku: existingSku,
+                    price: 500,
+                    stockPhysical: 10,
+                },
+            ],
+        });
+    } catch (err) {
+        if (err instanceof AppError && err.statusCode === 409) {
+            duplicateSkuBlocked = true;
+        }
+    }
+    assert.equal(
+        duplicateSkuBlocked,
+        true,
+        "Creating product with duplicate SKU variant must throw 409 DATA_ALREADY_EXISTS"
+    );
+
+    // Verificar que el producto fallido NO existe en la base de datos
+    const adminProducts = await repository.listAdminProducts({
+        q: "Producto con SKU duplicado",
+    });
+    assert.equal(
+        adminProducts.data.length,
+        0,
+        "Failed product must be deleted and not exist in database"
+    );
+    console.log(
+        "✅ [8/8] Product rollback and deletion upon variant error verified."
     );
 
     console.log(
-        "\n🎉 ALL 7 PRODUCTS, VARIANTS & KARDEX TEST CASES PASSED SUCCESSFULLY!"
+        "\n🎉 ALL 8 PRODUCTS, VARIANTS & KARDEX TEST CASES PASSED SUCCESSFULLY!"
     );
 }
 

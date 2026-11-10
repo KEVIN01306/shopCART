@@ -1379,3 +1379,86 @@ BEGIN
     FETCH NEXT @p_limit ROWS ONLY;
 END;
 GO
+
+-- 15. Eliminar producto por fallo en creación de variantes o imágenes (rollback físico de creación abortada)
+CREATE OR ALTER PROCEDURE SP_Productos_EliminarProductoPorFallo
+    @p_id VARCHAR(36),
+    @p_user_id VARCHAR(36) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM Products WHERE IDProduct = @p_id)
+    BEGIN
+        RETURN;
+    END
+
+    DECLARE @v_valid_user_id VARCHAR(36) = NULL;
+    IF @p_user_id IS NOT NULL AND EXISTS (SELECT 1 FROM Users WHERE IDUser = @p_user_id)
+    BEGIN
+        SET @v_valid_user_id = @p_user_id;
+    END
+
+    DECLARE @v_product_name VARCHAR(200);
+    SELECT @v_product_name = Name FROM Products WHERE IDProduct = @p_id;
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        -- 1. Eliminar movimientos de Kardex asociados a variantes parciales de este producto
+        DELETE FROM KardexMovements
+        WHERE IDVariant IN (SELECT IDVariant FROM ProductVariants WHERE IDProduct = @p_id);
+
+        -- 2. Eliminar posibles items en carrito o reservas de stock
+        DELETE FROM CartItems
+        WHERE IDVariant IN (SELECT IDVariant FROM ProductVariants WHERE IDProduct = @p_id);
+
+        DELETE FROM StockReservations
+        WHERE IDVariant IN (SELECT IDVariant FROM ProductVariants WHERE IDProduct = @p_id);
+
+        -- 3. Eliminar variantes del producto
+        DELETE FROM ProductVariants
+        WHERE IDProduct = @p_id;
+
+        -- 4. Eliminar imágenes del producto
+        DELETE FROM ProductImages
+        WHERE IDProduct = @p_id;
+
+        -- 5. Eliminar el producto padre
+        DELETE FROM Products
+        WHERE IDProduct = @p_id;
+
+        -- 6. Registrar en bitácora de auditoría que la creación fue cancelada por error
+        INSERT INTO AuditLogs (
+            IDAuditLog,
+            IDUser,
+            Entity,
+            Action,
+            OldValue,
+            NewValue,
+            CreatedAt
+        )
+        VALUES (
+            CONVERT(VARCHAR(36), NEWID()),
+            @v_valid_user_id,
+            'PRODUCTO',
+            'CANCELAR_CREACION',
+            CONCAT(N'{"id":"', @p_id, N'","name":"', REPLACE(ISNULL(@v_product_name, ''), '"', '\"'), N'"}'),
+            N'{"status":"ELIMINADO_POR_ERROR_EN_VARIANTES"}',
+            GETDATE()
+        );
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRAN;
+
+        DECLARE @ErrorMessage NVARCHAR(4000) = ERROR_MESSAGE();
+        DECLARE @ErrorSeverity INT = ERROR_SEVERITY();
+        DECLARE @ErrorState INT = ERROR_STATE();
+        RAISERROR (@ErrorMessage, @ErrorSeverity, @ErrorState);
+    END CATCH
+END;
+GO

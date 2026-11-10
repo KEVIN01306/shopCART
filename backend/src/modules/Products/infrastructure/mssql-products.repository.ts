@@ -355,29 +355,54 @@ export class MssqlProductsRepository implements IProductsRepository {
                 throw new NotFoundPersistenceError();
             }
 
-            if (data.imageUrls && data.imageUrls.length > 0) {
-                const combinedImages = coverImageUrl
-                    ? [coverImageUrl, ...data.imageUrls]
-                    : data.imageUrls;
-                await this.syncProductImages(productId, combinedImages);
-            }
-
-            if (data.variants && data.variants.length > 0) {
-                for (const variant of data.variants) {
-                    await this.createVariant(productId, {
-                        ...variant,
-                        userId: data.userId ?? variant.userId ?? null,
-                    });
+            try {
+                if (data.imageUrls && data.imageUrls.length > 0) {
+                    const combinedImages = coverImageUrl
+                        ? [coverImageUrl, ...data.imageUrls]
+                        : data.imageUrls;
+                    await this.syncProductImages(productId, combinedImages);
                 }
-            }
 
-            const refreshed = await this.findAdminProductById(productId);
-            if (!refreshed) {
-                throw new NotFoundPersistenceError();
+                if (data.variants && data.variants.length > 0) {
+                    for (const variant of data.variants) {
+                        await this.createVariant(productId, {
+                            ...variant,
+                            userId: data.userId ?? variant.userId ?? null,
+                        });
+                    }
+                }
+
+                const refreshed = await this.findAdminProductById(productId);
+                if (!refreshed) {
+                    throw new NotFoundPersistenceError();
+                }
+                return refreshed;
+            } catch (postCreateError) {
+                // Si ocurre algún error en las variantes o imágenes al crear el producto,
+                // se elimina de inmediato el producto creado junto con sus datos parciales
+                // para evitar productos huérfanos o corruptos.
+                try {
+                    await this.deleteProduct(productId, data.userId || null);
+                } catch (cleanupError) {
+                    console.error("Error al limpiar producto tras fallo en variantes:", cleanupError);
+                }
+                throw postCreateError;
             }
-            return refreshed;
         } catch (error) {
             if (error instanceof NotFoundPersistenceError) throw error;
+            throw MssqlErrorMapper.map(error);
+        }
+    }
+
+    async deleteProduct(id: string, userId?: string | null): Promise<void> {
+        try {
+            const pool = await this.poolProvider();
+            await pool
+                .request()
+                .input("p_id", sql.VarChar(36), id)
+                .input("p_user_id", sql.VarChar(36), userId || null)
+                .execute("SP_Productos_EliminarProductoPorFallo");
+        } catch (error) {
             throw MssqlErrorMapper.map(error);
         }
     }

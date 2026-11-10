@@ -140,6 +140,15 @@ export const CreateProductSchema = z.object({
     variants: z
         .array(CreateVariantSchema)
         .min(1, "El producto debe incluir al menos una variante inicial")
+        .refine(
+            (variants) => {
+                const skus = variants.map((v) => v.sku.toLowerCase().trim());
+                return new Set(skus).size === skus.length;
+            },
+            {
+                message: "No puedes incluir dos o más variantes con el mismo SKU en el mismo producto",
+            }
+        )
         .optional(),
 });
 
