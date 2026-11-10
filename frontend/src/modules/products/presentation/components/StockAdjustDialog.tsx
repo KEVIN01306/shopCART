@@ -198,7 +198,8 @@ export const StockAdjustDialog: React.FC<StockAdjustDialogProps> = ({
                                 >
                                     <MenuItem value="ENTRADA">ENTRADA (+ Ingreso de mercadería)</MenuItem>
                                     <MenuItem value="SALIDA">SALIDA (- Merma o retiro)</MenuItem>
-                                    <MenuItem value="AJUSTE">AJUSTE (= Definir stock físico exacto)</MenuItem>
+                                    <MenuItem value="AJUSTE">AJUSTE (± Diferencia de inventario)</MenuItem>
+                                    <MenuItem value="DEVOLUCION">DEVOLUCION (+ Reintegro por devolución)</MenuItem>
                                 </TextField>
                             )}
                         />

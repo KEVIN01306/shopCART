@@ -13,6 +13,7 @@ import { ToggleProductStatusUseCase } from "./application/toggle-product-status.
 import { CreateVariantUseCase } from "./application/create-variant.usecase.js";
 import { UpdateVariantUseCase } from "./application/update-variant.usecase.js";
 import { AdjustVariantStockUseCase } from "./application/adjust-variant-stock.usecase.js";
+import { ListKardexMovementsUseCase } from "./application/list-kardex-movements.usecase.js";
 import { ProductsController } from "./presentation/products.controller.js";
 
 export const productsRepository = new MssqlProductsRepository(getPool);
@@ -56,6 +57,9 @@ export const updateVariantUseCase = new UpdateVariantUseCase(
 export const adjustVariantStockUseCase = new AdjustVariantStockUseCase(
     productsRepository
 );
+export const listKardexMovementsUseCase = new ListKardexMovementsUseCase(
+    productsRepository
+);
 
 export const productsController = new ProductsController(
     listCatalogProductsUseCase,
@@ -70,5 +74,6 @@ export const productsController = new ProductsController(
     toggleProductStatusUseCase,
     createVariantUseCase,
     updateVariantUseCase,
-    adjustVariantStockUseCase
+    adjustVariantStockUseCase,
+    listKardexMovementsUseCase
 );

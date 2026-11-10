@@ -38,6 +38,8 @@ interface ShopFiltersSidebarProps {
     onPriceRangeCommit: (committedRange: [number, number]) => void;
     selectedBracketId: string | null;
     onSelectBracket: (bracket: PriceBracket | null) => void;
+    inStockOnly?: boolean;
+    onToggleInStockOnly?: (checked: boolean) => void;
     totalCatalogCount: number;
     onResetFilters: () => void;
 }
@@ -52,6 +54,8 @@ export const ShopFiltersSidebar: React.FC<ShopFiltersSidebarProps> = ({
     onPriceRangeCommit,
     selectedBracketId,
     onSelectBracket,
+    inStockOnly = false,
+    onToggleInStockOnly,
     totalCatalogCount,
     onResetFilters,
 }) => {
@@ -388,6 +392,58 @@ export const ShopFiltersSidebar: React.FC<ShopFiltersSidebarProps> = ({
                             );
                         })}
                     </Stack>
+
+                    <Divider sx={{ my: 2, borderColor: '#E5E9F2' }} />
+
+                    {/* Availability Filter */}
+                    <Typography
+                        sx={{
+                            fontSize: '15px',
+                            fontWeight: 700,
+                            color: '#425A8B',
+                            mb: 1,
+                        }}
+                    >
+                        Availability
+                    </Typography>
+
+                    <Box
+                        onClick={() => onToggleInStockOnly?.(!inStockOnly)}
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            py: 0.5,
+                            px: 0.75,
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            backgroundColor: inStockOnly ? '#FFF3E6' : 'transparent',
+                            transition: 'background-color 0.15s ease',
+                        }}
+                    >
+                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+                            <Checkbox
+                                size="small"
+                                checked={inStockOnly}
+                                sx={{
+                                    p: 0.5,
+                                    color: '#D5DFE4',
+                                    '&.Mui-checked': {
+                                        color: '#FD9636',
+                                    },
+                                }}
+                            />
+                            <Typography
+                                sx={{
+                                    fontSize: '13px',
+                                    fontWeight: inStockOnly ? 700 : 500,
+                                    color: inStockOnly ? '#425A8B' : '#66789C',
+                                }}
+                            >
+                                Solo disponibles en stock
+                            </Typography>
+                        </Stack>
+                    </Box>
 
                     <Divider sx={{ my: 2, borderColor: '#E5E9F2' }} />
 

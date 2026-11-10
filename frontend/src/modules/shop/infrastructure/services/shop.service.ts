@@ -63,10 +63,48 @@ export const normalizeShopProduct = (raw: Record<string, unknown>): ShopProduct 
 
     const computedMinPrice = prices.length > 0 ? Math.min(...prices) : 0;
     const computedMaxPrice = prices.length > 0 ? Math.max(...prices) : computedMinPrice;
+    const computedPhysical = (activeVariants.length > 0 ? activeVariants : variants).reduce(
+        (acc, v) => acc + v.stockPhysical,
+        0,
+    );
+    const computedReserved = (activeVariants.length > 0 ? activeVariants : variants).reduce(
+        (acc, v) => acc + v.stockReserved,
+        0,
+    );
     const computedStock = (activeVariants.length > 0 ? activeVariants : variants).reduce(
         (acc, v) => acc + v.stockAvailable,
         0,
     );
+
+    const mainImageUrl =
+        raw.mainImageUrl != null
+            ? String(raw.mainImageUrl)
+            : raw.main_image_url != null
+            ? String(raw.main_image_url)
+            : null;
+
+    const rawImages = Array.isArray(raw.imageUrls)
+        ? raw.imageUrls
+        : Array.isArray(raw.image_urls)
+        ? raw.image_urls
+        : Array.isArray(raw.images)
+        ? raw.images
+        : [];
+    const parsedImageUrls: string[] = [];
+    for (const img of rawImages) {
+        const url =
+            typeof img === 'string'
+                ? img.trim()
+                : typeof img === 'object' && img !== null
+                ? String((img as Record<string, unknown>).imageUrl ?? (img as Record<string, unknown>).url ?? '').trim()
+                : '';
+        if (url && !parsedImageUrls.includes(url)) {
+            parsedImageUrls.push(url);
+        }
+    }
+    if (parsedImageUrls.length === 0 && mainImageUrl) {
+        parsedImageUrls.push(mainImageUrl);
+    }
 
     return {
         id,
@@ -74,12 +112,8 @@ export const normalizeShopProduct = (raw: Record<string, unknown>): ShopProduct 
         categoryName: String(raw.categoryName ?? raw.category_name ?? 'Tecnología'),
         name: String(raw.name ?? ''),
         description: raw.description != null ? String(raw.description) : null,
-        mainImageUrl:
-            raw.mainImageUrl != null
-                ? String(raw.mainImageUrl)
-                : raw.main_image_url != null
-                ? String(raw.main_image_url)
-                : null,
+        mainImageUrl: mainImageUrl ?? parsedImageUrls[0] ?? null,
+        imageUrls: parsedImageUrls,
         isActive:
             raw.isActive !== undefined
                 ? Boolean(raw.isActive)
@@ -88,6 +122,12 @@ export const normalizeShopProduct = (raw: Record<string, unknown>): ShopProduct 
                 : true,
         minPrice: Number(raw.minPrice ?? raw.min_price ?? computedMinPrice),
         maxPrice: Number(raw.maxPrice ?? raw.max_price ?? computedMaxPrice),
+        totalStockPhysical: Number(
+            raw.totalStockPhysical ?? raw.total_stock_physical ?? computedPhysical,
+        ),
+        totalStockReserved: Number(
+            raw.totalStockReserved ?? raw.total_stock_reserved ?? computedReserved,
+        ),
         totalStockAvailable: Number(
             raw.totalStockAvailable ?? raw.total_stock_available ?? computedStock,
         ),
@@ -120,6 +160,7 @@ export const getCatalogProducts = async (
     if (params.categoryId) queryParams.categoryId = params.categoryId;
     if (params.minPrice !== undefined && params.minPrice > 0) queryParams.minPrice = params.minPrice;
     if (params.maxPrice !== undefined) queryParams.maxPrice = params.maxPrice;
+    if (params.inStock !== undefined) queryParams.inStock = String(params.inStock);
     if (params.sortBy) queryParams.sortBy = params.sortBy;
 
     const response = await api.get('/products/catalog', { params: queryParams });

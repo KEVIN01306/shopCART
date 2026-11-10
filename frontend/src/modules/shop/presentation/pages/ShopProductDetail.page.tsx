@@ -162,9 +162,25 @@ export const ShopProductDetailPage: React.FC = () => {
         return map;
     }, [activeVariants]);
 
-    // Build 5 vertical thumbnails (Capture 3 style)
+    // Build vertical thumbnails gallery from product.imageUrls (falling back to mainImageUrl)
     const galleryThumbnails = useMemo(() => {
-        const mainUrl = product?.mainImageUrl || FALLBACK_GALLERY_IMAGES[0];
+        const urls =
+            product?.imageUrls && product.imageUrls.length > 0
+                ? product.imageUrls.filter(Boolean)
+                : product?.mainImageUrl
+                ? [product.mainImageUrl]
+                : [FALLBACK_GALLERY_IMAGES[0]];
+
+        if (urls.length > 1) {
+            return urls.map((url, idx) => ({
+                label: `Imagen ${idx + 1}`,
+                url,
+                filter: 'none',
+                scale: 1,
+            }));
+        }
+
+        const mainUrl = urls[0] || FALLBACK_GALLERY_IMAGES[0];
         return [
             { label: 'Vista frontal', url: mainUrl, filter: 'none', scale: 1 },
             { label: 'Detalle zoom', url: mainUrl, filter: 'contrast(1.04)', scale: 1.08 },

@@ -6,6 +6,8 @@ import type {
     CreateCategory,
     CreateProductInput,
     CreateProductVariantInput,
+    KardexFilterOptions,
+    KardexMovement,
     Product,
     ProductVariant,
     UpdateCategory,
@@ -39,4 +41,7 @@ export interface IProductsRepository {
     createVariant(productId: string, data: CreateProductVariantInput): Promise<ProductVariant>;
     updateVariant(variantId: string, data: UpdateProductVariantInput): Promise<ProductVariant>;
     adjustVariantStock(data: AdjustVariantStockInput): Promise<ProductVariant>;
+    listKardexMovements(
+        options: KardexFilterOptions
+    ): Promise<{ data: KardexMovement[]; total: number }>;
 }

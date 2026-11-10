@@ -11,6 +11,8 @@ import type {
     CreateCategory,
     CreateProductInput,
     CreateProductVariantInput,
+    KardexFilterOptions,
+    KardexMovement,
     Product,
     ProductVariant,
     UpdateCategory,
@@ -20,6 +22,7 @@ import type {
 import {
     ProductMapper,
     type CategoryDbRow,
+    type KardexMovementDbRow,
     type ProductDbRow,
     type ProductVariantDbRow,
 } from "./mappers/product.mapper.js";
@@ -154,6 +157,15 @@ export class MssqlProductsRepository implements IProductsRepository {
                     options.maxPrice !== undefined ? options.maxPrice : null
                 )
                 .input("p_sort_by", sql.VarChar(30), options.sortBy || "latest")
+                .input(
+                    "p_in_stock",
+                    sql.Bit,
+                    options.inStock !== undefined
+                        ? options.inStock
+                            ? 1
+                            : 0
+                        : null
+                )
                 .execute("SP_Productos_ListarCatalogo");
 
             const recordsets = result.recordsets as unknown as
@@ -285,10 +297,38 @@ export class MssqlProductsRepository implements IProductsRepository {
         }
     }
 
+    private async syncProductImages(
+        productId: string,
+        imageUrls: string[]
+    ): Promise<void> {
+        const pool = await this.poolProvider();
+        const cleaned = imageUrls
+            .map((u) => u.trim())
+            .filter((u, idx, arr) => u.length > 0 && arr.indexOf(u) === idx);
+
+        const payload = JSON.stringify(
+            cleaned.map((url, idx) => ({
+                imageUrl: url,
+                isCover: idx === 0,
+                sortOrder: idx,
+            }))
+        );
+
+        await pool
+            .request()
+            .input("p_product_id", sql.VarChar(36), productId)
+            .input("p_images_json", sql.NVarChar(sql.MAX), payload)
+            .execute("SP_Productos_SincronizarImagenes");
+    }
+
     async createProduct(data: CreateProductInput): Promise<Product> {
         try {
             const pool = await this.poolProvider();
             const productId = data.id || crypto.randomUUID();
+            const coverImageUrl =
+                data.mainImageUrl?.trim() ||
+                data.imageUrls?.find((u) => u.trim().length > 0)?.trim() ||
+                null;
 
             const result = await pool
                 .request()
@@ -300,11 +340,7 @@ export class MssqlProductsRepository implements IProductsRepository {
                     sql.NVarChar(sql.MAX),
                     data.description?.trim() || null
                 )
-                .input(
-                    "p_main_image_url",
-                    sql.VarChar(500),
-                    data.mainImageUrl?.trim() || null
-                )
+                .input("p_main_image_url", sql.VarChar(500), coverImageUrl)
                 .input("p_user_id", sql.VarChar(36), data.userId || null)
                 .execute("SP_Productos_CrearProducto");
 
@@ -317,6 +353,13 @@ export class MssqlProductsRepository implements IProductsRepository {
 
             if (!productRow) {
                 throw new NotFoundPersistenceError();
+            }
+
+            if (data.imageUrls && data.imageUrls.length > 0) {
+                const combinedImages = coverImageUrl
+                    ? [coverImageUrl, ...data.imageUrls]
+                    : data.imageUrls;
+                await this.syncProductImages(productId, combinedImages);
             }
 
             if (data.variants && data.variants.length > 0) {
@@ -342,6 +385,16 @@ export class MssqlProductsRepository implements IProductsRepository {
     async updateProduct(id: string, data: UpdateProductInput): Promise<Product> {
         try {
             const pool = await this.poolProvider();
+            const coverImageUrl =
+                data.mainImageUrl !== undefined
+                    ? data.mainImageUrl?.trim() ||
+                      data.imageUrls?.find((u) => u.trim().length > 0)?.trim() ||
+                      ""
+                    : data.imageUrls && data.imageUrls.length > 0
+                      ? data.imageUrls.find((u) => u.trim().length > 0)?.trim() ??
+                        null
+                      : null;
+
             const result = await pool
                 .request()
                 .input("p_id", sql.VarChar(36), id)
@@ -362,13 +415,7 @@ export class MssqlProductsRepository implements IProductsRepository {
                         ? data.description?.trim() ?? ""
                         : null
                 )
-                .input(
-                    "p_main_image_url",
-                    sql.VarChar(500),
-                    data.mainImageUrl !== undefined
-                        ? data.mainImageUrl?.trim() ?? ""
-                        : null
-                )
+                .input("p_main_image_url", sql.VarChar(500), coverImageUrl)
                 .input(
                     "p_is_active",
                     sql.Bit,
@@ -386,6 +433,14 @@ export class MssqlProductsRepository implements IProductsRepository {
 
             if (!productRow) {
                 throw new NotFoundPersistenceError();
+            }
+
+            if (data.imageUrls !== undefined) {
+                const combinedImages =
+                    coverImageUrl && coverImageUrl.length > 0
+                        ? [coverImageUrl, ...data.imageUrls]
+                        : data.imageUrls;
+                await this.syncProductImages(id, combinedImages);
             }
 
             if (data.variants && data.variants.length > 0) {
@@ -597,6 +652,48 @@ export class MssqlProductsRepository implements IProductsRepository {
             return ProductMapper.toVariant(row);
         } catch (error) {
             if (error instanceof NotFoundPersistenceError) throw error;
+            throw MssqlErrorMapper.map(error);
+        }
+    }
+
+    async listKardexMovements(
+        options: KardexFilterOptions
+    ): Promise<{ data: KardexMovement[]; total: number }> {
+        try {
+            const pool = await this.poolProvider();
+            const page = options.page ?? 1;
+            const limit = options.limit ?? 15;
+
+            const result = await pool
+                .request()
+                .input("p_page", sql.Int, page)
+                .input("p_limit", sql.Int, limit)
+                .input(
+                    "p_product_id",
+                    sql.VarChar(36),
+                    options.productId || null
+                )
+                .input(
+                    "p_variant_id",
+                    sql.VarChar(36),
+                    options.variantId || null
+                )
+                .input(
+                    "p_movement_type",
+                    sql.VarChar(20),
+                    options.movementType || null
+                )
+                .execute<KardexMovementDbRow>("SP_Kardex_ListarMovimientos");
+
+            const rows = result.recordset ?? [];
+            const total =
+                rows.length > 0
+                    ? Number(rows[0]?.total_count ?? rows.length)
+                    : 0;
+            const data = rows.map((r) => ProductMapper.toKardexMovement(r));
+
+            return { data, total };
+        } catch (error) {
             throw MssqlErrorMapper.map(error);
         }
     }

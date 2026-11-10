@@ -1,5 +1,7 @@
 import type {
     Category,
+    KardexMovement,
+    KardexMovementType,
     Product,
     ProductVariant,
     VariantAttributes,
@@ -52,6 +54,7 @@ export interface ProductDbRow {
     name: string;
     description: string | null;
     main_image_url: string | null;
+    images_json?: string | null;
     is_active: boolean | number;
     created_at: Date;
     updated_at: Date;
@@ -74,6 +77,39 @@ export interface ProductDbRow {
     IsActive?: boolean | number;
     CreatedAt?: Date;
     UpdatedAt?: Date;
+}
+
+export interface KardexMovementDbRow {
+    id: string;
+    variant_id: string;
+    sku: string;
+    attributes: string | null;
+    product_id: string;
+    product_name: string;
+    user_id: string | null;
+    user_name: string | null;
+    user_email: string | null;
+    movement_type: string;
+    quantity: number;
+    previous_stock: number;
+    new_stock: number;
+    reason: string;
+    created_at: Date;
+    total_count?: number | null;
+    // Dual compatibility with PascalCase schema (KardexMovements)
+    IDKardex?: string;
+    IDVariant?: string;
+    SKU?: string;
+    Attributes?: string | null;
+    IDProduct?: string;
+    ProductName?: string;
+    IDUser?: string | null;
+    MovementType?: string;
+    Quantity?: number;
+    PreviousStock?: number;
+    NewStock?: number;
+    Reason?: string;
+    CreatedAt?: Date;
 }
 
 export class ProductMapper {
@@ -103,6 +139,45 @@ export class ProductMapper {
             return null;
         }
         return JSON.stringify(attrs);
+    }
+
+    static parseImagesJson(
+        imagesJson: string | null | undefined,
+        fallbackMainImageUrl: string | null
+    ): string[] {
+        const urls: string[] = [];
+        if (imagesJson) {
+            try {
+                const parsed = JSON.parse(imagesJson);
+                if (Array.isArray(parsed)) {
+                    for (const item of parsed) {
+                        const url =
+                            typeof item === "string"
+                                ? item.trim()
+                                : typeof item === "object" && item !== null
+                                  ? String(
+                                        (item as Record<string, unknown>)
+                                            .imageUrl ??
+                                            (item as Record<string, unknown>)
+                                                .ImageURL ??
+                                            (item as Record<string, unknown>)
+                                                .url ??
+                                            ""
+                                    ).trim()
+                                  : "";
+                        if (url && !urls.includes(url)) {
+                            urls.push(url);
+                        }
+                    }
+                }
+            } catch {
+                // fallback below
+            }
+        }
+        if (urls.length === 0 && fallbackMainImageUrl) {
+            urls.push(fallbackMainImageUrl);
+        }
+        return urls;
     }
 
     static toCategory(row: CategoryDbRow): Category {
@@ -150,15 +225,15 @@ export class ProductMapper {
             row.min_price !== undefined && row.min_price !== null
                 ? Number(row.min_price)
                 : variants.length > 0
-                ? Math.min(...variants.map((v) => v.price))
-                : 0;
+                    ? Math.min(...variants.map((v) => v.price))
+                    : 0;
 
         const maxPrice =
             row.max_price !== undefined && row.max_price !== null
                 ? Number(row.max_price)
                 : variants.length > 0
-                ? Math.max(...variants.map((v) => v.price))
-                : 0;
+                    ? Math.max(...variants.map((v) => v.price))
+                    : 0;
 
         const totalStockPhysical =
             row.total_stock_physical !== undefined && row.total_stock_physical !== null
@@ -181,6 +256,12 @@ export class ProductMapper {
                 : variants.length;
 
         const defaultVariant = variants[0];
+        const rawMainImage = row.main_image_url ?? row.ImageURL ?? null;
+        const imageUrls = ProductMapper.parseImagesJson(
+            row.images_json,
+            rawMainImage
+        );
+        const mainImageUrl = rawMainImage ?? imageUrls[0] ?? null;
 
         return {
             id: row.id ?? row.IDProduct ?? '',
@@ -188,7 +269,8 @@ export class ProductMapper {
             categoryName: row.category_name,
             name: row.name ?? row.Name ?? '',
             description: row.description ?? row.Description ?? null,
-            mainImageUrl: row.main_image_url ?? row.ImageURL ?? null,
+            mainImageUrl,
+            imageUrls,
             isActive: Boolean(row.is_active ?? row.IsActive),
             minPrice,
             maxPrice,
@@ -206,6 +288,31 @@ export class ProductMapper {
             variants,
             createdAt: new Date(row.created_at ?? row.CreatedAt ?? new Date()),
             updatedAt: new Date(row.updated_at ?? row.UpdatedAt ?? new Date()),
+        };
+    }
+
+    static toKardexMovement(row: KardexMovementDbRow): KardexMovement {
+        const userNameTrimmed = row.user_name ? row.user_name.trim() : "";
+        return {
+            id: row.id ?? row.IDKardex ?? "",
+            variantId: row.variant_id ?? row.IDVariant ?? "",
+            sku: row.sku ?? row.SKU ?? "",
+            attributes: ProductMapper.parseAttributes(
+                row.attributes ?? row.Attributes
+            ),
+            productId: row.product_id ?? row.IDProduct ?? "",
+            productName: row.product_name ?? row.ProductName ?? "",
+            userId: row.user_id ?? row.IDUser ?? null,
+            userName: userNameTrimmed || null,
+            userEmail: row.user_email ?? null,
+            movementType: (row.movement_type ??
+                row.MovementType ??
+                "AJUSTE") as KardexMovementType,
+            quantity: Number(row.quantity ?? row.Quantity ?? 0),
+            previousStock: Number(row.previous_stock ?? row.PreviousStock ?? 0),
+            newStock: Number(row.new_stock ?? row.NewStock ?? 0),
+            reason: row.reason ?? row.Reason ?? "",
+            createdAt: new Date(row.created_at ?? row.CreatedAt ?? new Date()),
         };
     }
 }

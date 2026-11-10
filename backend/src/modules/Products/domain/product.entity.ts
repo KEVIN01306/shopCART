@@ -1,6 +1,6 @@
 export type VariantAttributes = Record<string, string>;
 
-export type KardexMovementType = "ENTRADA" | "SALIDA" | "AJUSTE";
+export type KardexMovementType = "ENTRADA" | "SALIDA" | "AJUSTE" | "DEVOLUCION";
 
 export interface Category {
     id: string;
@@ -63,6 +63,32 @@ export interface AdjustVariantStockInput {
     userId?: string | null;
 }
 
+export interface KardexMovement {
+    id: string;
+    variantId: string;
+    sku: string;
+    attributes: VariantAttributes;
+    productId: string;
+    productName: string;
+    userId: string | null;
+    userName: string | null;
+    userEmail: string | null;
+    movementType: KardexMovementType;
+    quantity: number;
+    previousStock: number;
+    newStock: number;
+    reason: string;
+    createdAt: Date;
+}
+
+export interface KardexFilterOptions {
+    page?: number;
+    limit?: number;
+    productId?: string;
+    variantId?: string;
+    movementType?: KardexMovementType;
+}
+
 export interface Product {
     id: string;
     categoryId: string;
@@ -70,6 +96,7 @@ export interface Product {
     name: string;
     description: string | null;
     mainImageUrl: string | null;
+    imageUrls: string[];
     isActive: boolean;
     minPrice: number;
     maxPrice: number;
@@ -91,6 +118,7 @@ export interface CreateProductInput {
     name: string;
     description?: string | null;
     mainImageUrl?: string | null;
+    imageUrls?: string[];
     variants?: CreateProductVariantInput[];
     userId?: string | null;
 }
@@ -100,6 +128,7 @@ export interface UpdateProductInput {
     name?: string;
     description?: string | null;
     mainImageUrl?: string | null;
+    imageUrls?: string[];
     isActive?: boolean;
     variants?: Array<
         UpdateProductVariantInput & {
@@ -119,6 +148,7 @@ export interface CatalogFilterOptions {
     categoryId?: string;
     minPrice?: number;
     maxPrice?: number;
+    inStock?: boolean;
     sortBy?: "latest" | "price_asc" | "price_desc" | "name_asc";
 }
 

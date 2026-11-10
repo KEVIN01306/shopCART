@@ -66,10 +66,11 @@ export const ShopCatalogPage: React.FC = () => {
     const [sortBy, setSortBy] = useState<CatalogSortBy>('latest');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-    // Price Filter States
+    // Price & Availability Filter States
     const [priceRange, setPriceRange] = useState<[number, number]>([0, 15000]);
     const [committedPriceRange, setCommittedPriceRange] = useState<[number, number]>([0, 15000]);
     const [selectedBracketId, setSelectedBracketId] = useState<string | null>(null);
+    const [inStockOnly, setInStockOnly] = useState<boolean>(false);
 
     // Mobile Filters Drawer
     const [mobileFiltersOpen, setMobileFiltersOpen] = useState<boolean>(false);
@@ -130,6 +131,7 @@ export const ShopCatalogPage: React.FC = () => {
                 categoryId: selectedCategoryId || undefined,
                 minPrice: minPriceParam,
                 maxPrice: maxPriceParam,
+                inStock: inStockOnly ? true : undefined,
                 sortBy,
             });
             setProducts(result.data);
@@ -140,7 +142,7 @@ export const ShopCatalogPage: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    }, [page, limit, q, selectedCategoryId, committedPriceRange, sortBy]);
+    }, [page, limit, q, selectedCategoryId, committedPriceRange, inStockOnly, sortBy]);
 
     useEffect(() => {
         fetchCatalog();
@@ -181,6 +183,7 @@ export const ShopCatalogPage: React.FC = () => {
         setPriceRange([0, 15000]);
         setCommittedPriceRange([0, 15000]);
         setSelectedBracketId(null);
+        setInStockOnly(false);
         setSortBy('latest');
         setPage(1);
         setSearchParams({}, { replace: true });
@@ -397,6 +400,11 @@ export const ShopCatalogPage: React.FC = () => {
                         }}
                         selectedBracketId={selectedBracketId}
                         onSelectBracket={handleSelectBracket}
+                        inStockOnly={inStockOnly}
+                        onToggleInStockOnly={(checked) => {
+                            setInStockOnly(checked);
+                            setPage(1);
+                        }}
                         totalCatalogCount={total}
                         onResetFilters={handleResetFilters}
                     />
@@ -807,6 +815,12 @@ export const ShopCatalogPage: React.FC = () => {
                     selectedBracketId={selectedBracketId}
                     onSelectBracket={(bracket) => {
                         handleSelectBracket(bracket);
+                        setMobileFiltersOpen(false);
+                    }}
+                    inStockOnly={inStockOnly}
+                    onToggleInStockOnly={(checked) => {
+                        setInStockOnly(checked);
+                        setPage(1);
                         setMobileFiltersOpen(false);
                     }}
                     totalCatalogCount={total}

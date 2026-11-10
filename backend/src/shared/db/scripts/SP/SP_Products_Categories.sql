@@ -144,7 +144,8 @@ CREATE OR ALTER PROCEDURE SP_Productos_ListarCatalogo
     @p_category_id VARCHAR(36) = NULL,
     @p_min_price DECIMAL(12, 2) = NULL,
     @p_max_price DECIMAL(12, 2) = NULL,
-    @p_sort_by VARCHAR(30) = 'latest'
+    @p_sort_by VARCHAR(30) = 'latest',
+    @p_in_stock BIT = NULL
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -167,6 +168,7 @@ BEGIN
         name VARCHAR(200),
         description NVARCHAR(MAX),
         main_image_url VARCHAR(500),
+        images_json NVARCHAR(MAX),
         is_active BIT,
         created_at DATETIME2,
         updated_at DATETIME2,
@@ -212,6 +214,7 @@ BEGIN
         name,
         description,
         main_image_url,
+        images_json,
         is_active,
         created_at,
         updated_at,
@@ -231,6 +234,7 @@ BEGIN
         p.Name AS name,
         p.Description AS description,
         coverImg.ImageURL AS main_image_url,
+        prodImgs.images_json AS images_json,
         p.IsActive AS is_active,
         p.CreatedAt AS created_at,
         p.UpdatedAt AS updated_at,
@@ -257,8 +261,22 @@ BEGIN
         WHERE pi.IDProduct = p.IDProduct
         ORDER BY pi.IsCover DESC, pi.SortOrder ASC, pi.CreatedAt ASC
     ) coverImg
+    OUTER APPLY (
+        SELECT (
+            SELECT
+                pi.IDImage AS id,
+                pi.ImageURL AS imageUrl,
+                pi.SortOrder AS sortOrder,
+                pi.IsCover AS isCover
+            FROM ProductImages pi
+            WHERE pi.IDProduct = p.IDProduct
+            ORDER BY pi.IsCover DESC, pi.SortOrder ASC, pi.CreatedAt ASC
+            FOR JSON PATH
+        ) AS images_json
+    ) prodImgs
     WHERE p.IsActive = 1
       AND (@p_category_id IS NULL OR p.IDCategory = @p_category_id)
+      AND (@p_in_stock IS NULL OR @p_in_stock = 0 OR vs.total_stock_available > 0)
       AND (
           @v_search IS NULL
           OR p.Name LIKE @v_search
@@ -289,6 +307,7 @@ BEGIN
         name,
         description,
         main_image_url,
+        images_json,
         is_active,
         created_at,
         updated_at,
@@ -352,6 +371,7 @@ BEGIN
         name VARCHAR(200),
         description NVARCHAR(MAX),
         main_image_url VARCHAR(500),
+        images_json NVARCHAR(MAX),
         is_active BIT,
         created_at DATETIME2,
         updated_at DATETIME2,
@@ -371,6 +391,7 @@ BEGIN
         name,
         description,
         main_image_url,
+        images_json,
         is_active,
         created_at,
         updated_at,
@@ -389,6 +410,7 @@ BEGIN
         p.Name AS name,
         p.Description AS description,
         coverImg.ImageURL AS main_image_url,
+        MAX(prodImgs.images_json) AS images_json,
         p.IsActive AS is_active,
         p.CreatedAt AS created_at,
         p.UpdatedAt AS updated_at,
@@ -410,6 +432,19 @@ BEGIN
         WHERE pi.IDProduct = p.IDProduct
         ORDER BY pi.IsCover DESC, pi.SortOrder ASC, pi.CreatedAt ASC
     ) coverImg
+    OUTER APPLY (
+        SELECT (
+            SELECT
+                pi.IDImage AS id,
+                pi.ImageURL AS imageUrl,
+                pi.SortOrder AS sortOrder,
+                pi.IsCover AS isCover
+            FROM ProductImages pi
+            WHERE pi.IDProduct = p.IDProduct
+            ORDER BY pi.IsCover DESC, pi.SortOrder ASC, pi.CreatedAt ASC
+            FOR JSON PATH
+        ) AS images_json
+    ) prodImgs
     WHERE (@p_category_id IS NULL OR p.IDCategory = @p_category_id)
       AND (
           @v_search IS NULL
@@ -445,6 +480,7 @@ BEGIN
         name,
         description,
         main_image_url,
+        images_json,
         is_active,
         created_at,
         updated_at,
@@ -494,6 +530,7 @@ BEGIN
         p.Name AS name,
         p.Description AS description,
         coverImg.ImageURL AS main_image_url,
+        MAX(prodImgs.images_json) AS images_json,
         p.IsActive AS is_active,
         p.CreatedAt AS created_at,
         p.UpdatedAt AS updated_at,
@@ -515,6 +552,19 @@ BEGIN
         WHERE pi.IDProduct = p.IDProduct
         ORDER BY pi.IsCover DESC, pi.SortOrder ASC, pi.CreatedAt ASC
     ) coverImg
+    OUTER APPLY (
+        SELECT (
+            SELECT
+                pi.IDImage AS id,
+                pi.ImageURL AS imageUrl,
+                pi.SortOrder AS sortOrder,
+                pi.IsCover AS isCover
+            FROM ProductImages pi
+            WHERE pi.IDProduct = p.IDProduct
+            ORDER BY pi.IsCover DESC, pi.SortOrder ASC, pi.CreatedAt ASC
+            FOR JSON PATH
+        ) AS images_json
+    ) prodImgs
     WHERE p.IDProduct = @p_id
       AND (@p_only_active = 0 OR (p.IsActive = 1 AND c.IsActive = 1))
     GROUP BY
@@ -1080,7 +1130,7 @@ BEGIN
     SET NOCOUNT ON;
     SET XACT_ABORT ON;
 
-    IF @p_movement_type NOT IN ('ENTRADA', 'SALIDA', 'AJUSTE')
+    IF @p_movement_type NOT IN ('ENTRADA', 'SALIDA', 'AJUSTE', 'DEVOLUCION')
     BEGIN
         THROW 50005, 'DATOS_INVALIDOS: Tipo de movimiento inválido.', 1;
     END
@@ -1118,7 +1168,7 @@ BEGIN
         DECLARE @v_new_stock INT;
         DECLARE @v_signed_qty INT;
 
-        IF @p_movement_type = 'ENTRADA'
+        IF @p_movement_type IN ('ENTRADA', 'DEVOLUCION')
         BEGIN
             SET @v_signed_qty = ABS(@p_quantity);
             SET @v_new_stock = @v_prev_stock + @v_signed_qty;
@@ -1208,5 +1258,124 @@ BEGIN
             ROLLBACK TRAN;
         THROW;
     END CATCH
+END;
+GO
+
+-- 14. Sincronizar galería de múltiples imágenes de un producto (ProductImages)
+CREATE OR ALTER PROCEDURE SP_Productos_SincronizarImagenes
+    @p_product_id VARCHAR(36),
+    @p_images_json NVARCHAR(MAX)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    IF NOT EXISTS (SELECT 1 FROM Products WHERE IDProduct = @p_product_id)
+    BEGIN
+        THROW 50001, 'NO_ENCONTRADO: El producto no existe.', 1;
+    END
+
+    BEGIN TRY
+        BEGIN TRAN;
+
+        DELETE FROM ProductImages
+        WHERE IDProduct = @p_product_id;
+
+        IF @p_images_json IS NOT NULL AND ISJSON(@p_images_json) = 1
+        BEGIN
+            INSERT INTO ProductImages (
+                IDImage,
+                IDProduct,
+                ImageURL,
+                SortOrder,
+                IsCover,
+                CreatedAt
+            )
+            SELECT
+                CONVERT(VARCHAR(36), NEWID()),
+                @p_product_id,
+                LTRIM(RTRIM(
+                    CASE
+                        WHEN j.[type] = 5 THEN JSON_VALUE(j.[value], '$.imageUrl')
+                        ELSE j.[value]
+                    END
+                )),
+                COALESCE(
+                    TRY_CAST(JSON_VALUE(CASE WHEN j.[type] = 5 THEN j.[value] END, '$.sortOrder') AS INT),
+                    TRY_CAST(j.[key] AS INT),
+                    0
+                ),
+                CASE
+                    WHEN j.[type] = 5 AND JSON_VALUE(j.[value], '$.isCover') IN ('true', '1') THEN 1
+                    WHEN TRY_CAST(j.[key] AS INT) = 0 THEN 1
+                    ELSE 0
+                END,
+                GETDATE()
+            FROM OPENJSON(@p_images_json) j
+            WHERE LTRIM(RTRIM(COALESCE(
+                CASE
+                    WHEN j.[type] = 5 THEN JSON_VALUE(j.[value], '$.imageUrl')
+                    ELSE j.[value]
+                END,
+                ''
+            ))) <> '';
+        END
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRAN;
+        THROW;
+    END CATCH
+END;
+GO
+
+-- 15. Listar historial paginado de movimientos de Kardex (Auditoría de existencias)
+CREATE OR ALTER PROCEDURE SP_Kardex_ListarMovimientos
+    @p_page INT = 1,
+    @p_limit INT = 15,
+    @p_product_id VARCHAR(36) = NULL,
+    @p_variant_id VARCHAR(36) = NULL,
+    @p_movement_type VARCHAR(20) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @p_page < 1 SET @p_page = 1;
+    IF @p_limit < 1 SET @p_limit = 15;
+
+    DECLARE @v_offset INT = (@p_page - 1) * @p_limit;
+
+    SELECT
+        km.IDKardex AS id,
+        km.IDVariant AS variant_id,
+        pv.SKU AS sku,
+        pv.Attributes AS attributes,
+        p.IDProduct AS product_id,
+        p.Name AS product_name,
+        km.IDUser AS user_id,
+        CONCAT(u.FirstName, ' ', u.LastName) AS user_name,
+        u.Email AS user_email,
+        km.MovementType AS movement_type,
+        km.Quantity AS quantity,
+        km.PreviousStock AS previous_stock,
+        km.NewStock AS new_stock,
+        km.Reason AS reason,
+        km.CreatedAt AS created_at,
+        COUNT(*) OVER() AS total_count
+    FROM KardexMovements km
+    INNER JOIN ProductVariants pv
+        ON pv.IDVariant = km.IDVariant
+    INNER JOIN Products p
+        ON p.IDProduct = pv.IDProduct
+    LEFT JOIN Users u
+        ON u.IDUser = km.IDUser
+    WHERE (@p_product_id IS NULL OR p.IDProduct = @p_product_id)
+      AND (@p_variant_id IS NULL OR km.IDVariant = @p_variant_id)
+      AND (@p_movement_type IS NULL OR km.MovementType = @p_movement_type)
+    ORDER BY km.CreatedAt DESC
+    OFFSET @v_offset ROWS
+    FETCH NEXT @p_limit ROWS ONLY;
 END;
 GO

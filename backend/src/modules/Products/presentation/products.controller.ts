@@ -14,13 +14,24 @@ import type { ToggleProductStatusUseCase } from "../application/toggle-product-s
 import type { CreateVariantUseCase } from "../application/create-variant.usecase.js";
 import type { UpdateVariantUseCase } from "../application/update-variant.usecase.js";
 import type { AdjustVariantStockUseCase } from "../application/adjust-variant-stock.usecase.js";
-import type { CatalogFilterOptions } from "../domain/product.entity.js";
+import type { ListKardexMovementsUseCase } from "../application/list-kardex-movements.usecase.js";
+import type {
+    CatalogFilterOptions,
+    KardexMovementType,
+} from "../domain/product.entity.js";
 
 const VALID_SORT_BY = new Set([
     "latest",
     "price_asc",
     "price_desc",
     "name_asc",
+]);
+
+const VALID_MOVEMENT_TYPES = new Set([
+    "ENTRADA",
+    "SALIDA",
+    "AJUSTE",
+    "DEVOLUCION",
 ]);
 
 export class ProductsController extends BaseController {
@@ -37,7 +48,8 @@ export class ProductsController extends BaseController {
         private readonly toggleProductStatusUseCase: ToggleProductStatusUseCase,
         private readonly createVariantUseCase: CreateVariantUseCase,
         private readonly updateVariantUseCase: UpdateVariantUseCase,
-        private readonly adjustVariantStockUseCase: AdjustVariantStockUseCase
+        private readonly adjustVariantStockUseCase: AdjustVariantStockUseCase,
+        private readonly listKardexMovementsUseCase?: ListKardexMovementsUseCase
     ) {
         super();
     }
@@ -82,6 +94,14 @@ export class ProductsController extends BaseController {
                 VALID_SORT_BY.has(sortByParam) ? sortByParam : "latest"
             ) as CatalogFilterOptions["sortBy"];
 
+            const inStockRaw = req.query.inStock;
+            const inStock =
+                inStockRaw === "true" || inStockRaw === "1"
+                    ? true
+                    : inStockRaw === "false" || inStockRaw === "0"
+                      ? false
+                      : undefined;
+
             const offset = (page - 1) * limit;
             const result = await this.listCatalogProductsUseCase.execute({
                 page,
@@ -90,6 +110,7 @@ export class ProductsController extends BaseController {
                 categoryId,
                 minPrice,
                 maxPrice,
+                inStock,
                 sortBy,
             });
 
@@ -432,6 +453,71 @@ export class ProductsController extends BaseController {
                     ResponseHttp.success(
                         "Stock de variante ajustado y registrado en Kardex exitosamente",
                         variant
+                    )
+                );
+        } catch (error) {
+            next(error);
+        }
+    };
+
+    listKardexMovements = async (
+        req: Request,
+        res: Response,
+        next: NextFunction
+    ) => {
+        try {
+            if (!this.listKardexMovementsUseCase) {
+                return res
+                    .status(200)
+                    .json(
+                        ResponseHttp.pagination(
+                            "Historial de movimientos en Kardex obtenido exitosamente",
+                            [],
+                            0,
+                            15,
+                            0
+                        )
+                    );
+            }
+
+            const page = req.query.page
+                ? Math.max(1, parseInt(String(req.query.page), 10) || 1)
+                : 1;
+            const limit = req.query.limit
+                ? Math.max(1, parseInt(String(req.query.limit), 10) || 15)
+                : 15;
+            const productId = req.query.productId
+                ? String(req.query.productId).trim()
+                : undefined;
+            const variantId = req.query.variantId
+                ? String(req.query.variantId).trim()
+                : undefined;
+            const movementTypeRaw = req.query.movementType
+                ? String(req.query.movementType).trim().toUpperCase()
+                : undefined;
+            const movementType =
+                movementTypeRaw && VALID_MOVEMENT_TYPES.has(movementTypeRaw)
+                    ? (movementTypeRaw as KardexMovementType)
+                    : undefined;
+
+            const offset = (page - 1) * limit;
+            const result = await this.listKardexMovementsUseCase.execute({
+                page,
+                limit,
+                productId,
+                variantId,
+                movementType,
+            });
+
+            return res
+                .status(200)
+                .json(
+                    ResponseHttp.pagination(
+                        "Historial de movimientos en Kardex obtenido exitosamente",
+                        result.data,
+                        result.total,
+                        limit,
+                        offset
                     )
                 );
         } catch (error) {

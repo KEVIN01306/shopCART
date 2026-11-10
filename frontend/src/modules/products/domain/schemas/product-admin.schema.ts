@@ -51,7 +51,7 @@ export const productFormSchema = z.object({
 export type ProductFormValues = z.infer<typeof productFormSchema>;
 
 export const stockAdjustSchema = z.object({
-    movementType: z.enum(['ENTRADA', 'SALIDA', 'AJUSTE']),
+    movementType: z.enum(['ENTRADA', 'SALIDA', 'AJUSTE', 'DEVOLUCION']),
     quantity: z
         .number({ message: 'Ingrese una cantidad válida' })
         .int('La cantidad debe ser un número entero')

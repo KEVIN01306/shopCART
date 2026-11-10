@@ -25,9 +25,12 @@ export interface ShopProduct {
     name: string;
     description: string | null;
     mainImageUrl: string | null;
+    imageUrls?: string[];
     isActive: boolean;
     minPrice: number;
     maxPrice: number;
+    totalStockPhysical?: number;
+    totalStockReserved?: number;
     totalStockAvailable: number;
     variantsCount: number;
     variants: ProductVariantDto[];
@@ -43,6 +46,7 @@ export interface CatalogQueryParams {
     categoryId?: string;
     minPrice?: number;
     maxPrice?: number;
+    inStock?: boolean;
     sortBy?: CatalogSortBy;
 }
 

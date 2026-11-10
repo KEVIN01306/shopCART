@@ -13,10 +13,6 @@ import {
     Tooltip,
     Pagination,
     Skeleton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     Snackbar,
     Alert,
     InputAdornment,
@@ -31,12 +27,12 @@ import {
     LayersOutlined,
     OpenInNewRounded,
     TuneRounded,
+    HistoryRounded,
 } from '@mui/icons-material';
 import {
     getAdminCategories,
     getAdminProducts,
     toggleAdminProductStatus,
-    createAdminCategory,
 } from '../../infrastructure/services/products-admin.service';
 import type {
     AdminCategoryDto,
@@ -45,10 +41,17 @@ import type {
 } from '../../domain/dto/product-admin.dto';
 import { ProductFormDialog } from '../components/ProductFormDialog';
 import { StockAdjustDialog } from '../components/StockAdjustDialog';
+import { CategoryManagerDialog } from '../components/CategoryManagerDialog';
+import { KardexHistoryDialog } from '../components/KardexHistoryDialog';
 import { formatMoney } from '../../../../core/utils/formatMoney';
+import { useAuthStore } from '../../../../core/store/authStore';
+import { hasSomeRole } from '../../../../core/utils/permissions';
 
 export const ProductsListPage: React.FC = () => {
     const navigate = useNavigate();
+    const user = useAuthStore((state) => state.user);
+    const isAdmin = hasSomeRole(user, ['Administrador']);
+    const canViewKardex = hasSomeRole(user, ['Administrador', 'Operador']);
 
     const [categories, setCategories] = useState<AdminCategoryDto[]>([]);
     const [products, setProducts] = useState<AdminProductDto[]>([]);
@@ -70,11 +73,8 @@ export const ProductsListPage: React.FC = () => {
         variant: AdminProductVariantDto;
     } | null>(null);
 
-    // Quick Category Modal
     const [categoryModalOpen, setCategoryModalOpen] = useState<boolean>(false);
-    const [newCatName, setNewCatName] = useState<string>('');
-    const [newCatDesc, setNewCatDesc] = useState<string>('');
-    const [creatingCategory, setCreatingCategory] = useState<boolean>(false);
+    const [kardexHistoryOpen, setKardexHistoryOpen] = useState<boolean>(false);
 
     // Snackbar feedback
     const [snackbar, setSnackbar] = useState<{
@@ -175,37 +175,6 @@ export const ProductsListPage: React.FC = () => {
         }
     };
 
-    const handleCreateCategorySubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!newCatName.trim()) return;
-        setCreatingCategory(true);
-        try {
-            const created = await createAdminCategory({
-                name: newCatName.trim(),
-                description: newCatDesc.trim() || null,
-            });
-            setCategories((prev) => [...prev, created]);
-            setNewCatName('');
-            setNewCatDesc('');
-            setCategoryModalOpen(false);
-            setSnackbar({
-                open: true,
-                message: `Categoría "${created.name}" creada exitosamente`,
-                severity: 'success',
-            });
-        } catch (err: unknown) {
-            const axiosErr = err as { response?: { data?: { message?: string } } };
-            setSnackbar({
-                open: true,
-                message:
-                    axiosErr.response?.data?.message || 'Error al crear la categoría',
-                severity: 'error',
-            });
-        } finally {
-            setCreatingCategory(false);
-        }
-    };
-
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         setPage(1);
@@ -283,25 +252,49 @@ export const ProductsListPage: React.FC = () => {
                         Ver Tienda Pública
                     </Button>
 
-                    <Button
-                        onClick={() => setCategoryModalOpen(true)}
-                        startIcon={<CategoryOutlined sx={{ fontSize: 18 }} />}
-                        sx={{
-                            borderRadius: '6px',
-                            border: '1px solid #425A8B',
-                            color: '#425A8B',
-                            fontWeight: 700,
-                            fontSize: '13px',
-                            px: 2,
-                            py: 1,
-                            textTransform: 'none',
-                            '&:hover': {
-                                backgroundColor: '#F0F3F8',
-                            },
-                        }}
-                    >
-                        + Nueva Categoría
-                    </Button>
+                    {canViewKardex && (
+                        <Button
+                            onClick={() => setKardexHistoryOpen(true)}
+                            startIcon={<HistoryRounded sx={{ fontSize: 18 }} />}
+                            sx={{
+                                borderRadius: '6px',
+                                border: '1px solid #425A8B',
+                                color: '#425A8B',
+                                fontWeight: 700,
+                                fontSize: '13px',
+                                px: 2,
+                                py: 1,
+                                textTransform: 'none',
+                                '&:hover': {
+                                    backgroundColor: '#F0F3F8',
+                                },
+                            }}
+                        >
+                            Historial Kardex
+                        </Button>
+                    )}
+
+                    {isAdmin && (
+                        <Button
+                            onClick={() => setCategoryModalOpen(true)}
+                            startIcon={<CategoryOutlined sx={{ fontSize: 18 }} />}
+                            sx={{
+                                borderRadius: '6px',
+                                border: '1px solid #425A8B',
+                                color: '#425A8B',
+                                fontWeight: 700,
+                                fontSize: '13px',
+                                px: 2,
+                                py: 1,
+                                textTransform: 'none',
+                                '&:hover': {
+                                    backgroundColor: '#F0F3F8',
+                                },
+                            }}
+                        >
+                            Categorías
+                        </Button>
+                    )}
 
                     <Button
                         onClick={handleOpenCreate}
@@ -630,6 +623,18 @@ export const ProductsListPage: React.FC = () => {
                                             <Typography sx={{ fontSize: '12px', color: '#8C9EC5' }}>
                                                 • {product.variants?.length || product.variantsCount || 1} variantes
                                             </Typography>
+                                            <Chip
+                                                label={`Físico: ${product.totalStockPhysical ?? 0} | Reservado: ${product.totalStockReserved ?? 0} | Disponible: ${product.totalStockAvailable ?? 0}`}
+                                                size="small"
+                                                sx={{
+                                                    height: 22,
+                                                    backgroundColor: '#F8FAFC',
+                                                    color: '#425A8B',
+                                                    fontWeight: 700,
+                                                    fontSize: '11px',
+                                                    border: '1px solid #D5DFE4',
+                                                }}
+                                            />
                                         </Stack>
 
                                         <Typography
@@ -934,65 +939,23 @@ export const ProductsListPage: React.FC = () => {
                 variant={stockDialogTarget?.variant || null}
             />
 
-            {/* Standalone Create Category Modal */}
-            <Dialog
+            {/* Category Manager Dialog */}
+            <CategoryManagerDialog
                 open={categoryModalOpen}
                 onClose={() => setCategoryModalOpen(false)}
-                maxWidth="xs"
-                fullWidth
-            >
-                <DialogTitle sx={{ fontWeight: 800, color: '#425A8B' }}>
-                    Crear Nueva Categoría
-                </DialogTitle>
-                <Box component="form" onSubmit={handleCreateCategorySubmit}>
-                    <DialogContent>
-                        <Stack spacing={2}>
-                            <TextField
-                                label="Nombre de Categoría *"
-                                placeholder="Ej. Computers & Laptop"
-                                size="small"
-                                fullWidth
-                                required
-                                value={newCatName}
-                                onChange={(e) => setNewCatName(e.target.value)}
-                            />
-                            <TextField
-                                label="Descripción"
-                                placeholder="Equipos portátiles, monitores y estaciones de trabajo"
-                                size="small"
-                                multiline
-                                rows={2}
-                                fullWidth
-                                value={newCatDesc}
-                                onChange={(e) => setNewCatDesc(e.target.value)}
-                            />
-                        </Stack>
-                    </DialogContent>
-                    <DialogActions sx={{ px: 3, pb: 2 }}>
-                        <Button
-                            onClick={() => setCategoryModalOpen(false)}
-                            sx={{ color: '#66789C', textTransform: 'none' }}
-                        >
-                            Cancelar
-                        </Button>
-                        <Button
-                            type="submit"
-                            disabled={creatingCategory || !newCatName.trim()}
-                            sx={{
-                                backgroundColor: '#425A8B',
-                                color: '#FFFFFF',
-                                fontWeight: 700,
-                                textTransform: 'none',
-                                px: 2.5,
-                                borderRadius: '6px',
-                                '&:hover': { backgroundColor: '#2B3E66' },
-                            }}
-                        >
-                            {creatingCategory ? 'Guardando...' : 'Crear Categoría'}
-                        </Button>
-                    </DialogActions>
-                </Box>
-            </Dialog>
+                categories={categories}
+                onCategoriesChanged={() => {
+                    loadCategories();
+                    loadProducts();
+                }}
+            />
+
+            {/* Kardex History Dialog */}
+            <KardexHistoryDialog
+                open={kardexHistoryOpen}
+                onClose={() => setKardexHistoryOpen(false)}
+                products={products}
+            />
 
             <Snackbar
                 open={snackbar.open}

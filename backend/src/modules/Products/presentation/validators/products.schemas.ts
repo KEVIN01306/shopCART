@@ -88,6 +88,25 @@ export const UpdateVariantSchema = z.object({
     isActive: z.boolean().optional(),
 });
 
+export const CatalogQuerySchema = z.object({
+    page: z.coerce.number().int().min(1).optional(),
+    limit: z.coerce.number().int().min(1).max(100).optional(),
+    q: z.string().trim().optional(),
+    categoryId: z.string().trim().optional(),
+    minPrice: z.coerce.number().nonnegative().optional(),
+    maxPrice: z.coerce.number().nonnegative().optional(),
+    sortBy: z.enum(["latest", "price_asc", "price_desc", "name_asc"]).optional(),
+    inStock: z
+        .preprocess((val) => {
+            if (val === "true" || val === "1" || val === true) return true;
+            if (val === "false" || val === "0" || val === false) return false;
+            return undefined;
+        }, z.boolean().optional())
+        .optional(),
+});
+
+export const catalogQuerySchema = CatalogQuerySchema;
+
 export const CreateProductSchema = z.object({
     categoryId: z
         .string()
@@ -108,6 +127,15 @@ export const CreateProductSchema = z.object({
         .trim()
         .max(500, "La URL de imagen no puede exceder 500 caracteres")
         .nullable()
+        .optional(),
+    imageUrls: z
+        .array(
+            z
+                .string()
+                .trim()
+                .url("Cada imagen debe ser una URL válida")
+                .max(500, "La URL de imagen no puede exceder 500 caracteres")
+        )
         .optional(),
     variants: z
         .array(CreateVariantSchema)
@@ -137,6 +165,15 @@ export const UpdateProductSchema = z.object({
         .trim()
         .max(500, "La URL de imagen no puede exceder 500 caracteres")
         .nullable()
+        .optional(),
+    imageUrls: z
+        .array(
+            z
+                .string()
+                .trim()
+                .url("Cada imagen debe ser una URL válida")
+                .max(500, "La URL de imagen no puede exceder 500 caracteres")
+        )
         .optional(),
     isActive: z.boolean().optional(),
     variants: z
@@ -168,7 +205,7 @@ export const ToggleProductStatusSchema = z.object({
 });
 
 export const AdjustVariantStockSchema = z.object({
-    movementType: z.enum(["ENTRADA", "SALIDA", "AJUSTE"]),
+    movementType: z.enum(["ENTRADA", "SALIDA", "AJUSTE", "DEVOLUCION"]),
     quantity: z.coerce
         .number()
         .int("La cantidad debe ser un número entero")

@@ -67,6 +67,10 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
     const [newCategoryDesc, setNewCategoryDesc] = useState('');
     const [creatingCategory, setCreatingCategory] = useState(false);
 
+    // Additional Gallery Image URLs
+    const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
+    const [newGalleryUrl, setNewGalleryUrl] = useState<string>('');
+
     const {
         control,
         handleSubmit,
@@ -149,6 +153,11 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                 isActive: initialData.isActive,
                 variants: mappedVariants,
             });
+            const extraImages = (initialData.imageUrls || []).filter(
+                (u) => u && u !== initialData.mainImageUrl,
+            );
+            setGalleryUrls(extraImages);
+            setNewGalleryUrl('');
         } else {
             reset({
                 categoryId: categories[0]?.id || '',
@@ -170,8 +179,23 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                     },
                 ],
             });
+            setGalleryUrls([]);
+            setNewGalleryUrl('');
         }
     }, [open, initialData, categories, reset]);
+
+    const handleAddGalleryUrl = () => {
+        const trimmed = newGalleryUrl.trim();
+        if (!trimmed || !trimmed.startsWith('http')) return;
+        if (!galleryUrls.includes(trimmed)) {
+            setGalleryUrls((prev) => [...prev, trimmed]);
+        }
+        setNewGalleryUrl('');
+    };
+
+    const handleRemoveGalleryUrl = (urlToRemove: string) => {
+        setGalleryUrls((prev) => prev.filter((u) => u !== urlToRemove));
+    };
 
     const handleCreateQuickCategory = async () => {
         if (!newCategoryName.trim()) return;
@@ -245,12 +269,19 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                 };
             });
 
+            const coverUrl = values.mainImageUrl?.trim() || null;
+            const allImageUrls = [
+                ...(coverUrl ? [coverUrl] : []),
+                ...galleryUrls.map((u) => u.trim()).filter(Boolean),
+            ].filter((u, idx, arr) => arr.indexOf(u) === idx);
+
             if (isEditMode && initialData) {
                 await updateAdminProduct(initialData.id, {
                     categoryId: values.categoryId,
                     name: values.name.trim(),
                     description: values.description?.trim() || null,
-                    mainImageUrl: values.mainImageUrl?.trim() || null,
+                    mainImageUrl: coverUrl,
+                    imageUrls: allImageUrls,
                     isActive: values.isActive,
                     variants: formattedVariants,
                 });
@@ -259,7 +290,8 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                     categoryId: values.categoryId,
                     name: values.name.trim(),
                     description: values.description?.trim() || null,
-                    mainImageUrl: values.mainImageUrl?.trim() || null,
+                    mainImageUrl: coverUrl,
+                    imageUrls: allImageUrls,
                     variants: formattedVariants,
                 });
             }
@@ -470,11 +502,91 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                                                 error={Boolean(errors.mainImageUrl)}
                                                 helperText={
                                                     errors.mainImageUrl?.message ||
-                                                    'Se mostrará en las cards del catálogo y en la galería principal.'
+                                                    'Se mostrará en las cards del catálogo y como portada principal.'
                                                 }
                                             />
                                         )}
                                     />
+
+                                    {/* Galería de Múltiples Imágenes Adicionales */}
+                                    <Box
+                                        sx={{
+                                            p: 1.5,
+                                            borderRadius: '8px',
+                                            backgroundColor: '#F8FAFC',
+                                            border: '1px solid #E5E9F2',
+                                        }}
+                                    >
+                                        <Typography
+                                            sx={{
+                                                fontSize: '12.5px',
+                                                fontWeight: 700,
+                                                color: '#425A8B',
+                                                mb: 1,
+                                            }}
+                                        >
+                                            Galería de Imágenes Adicionales ({galleryUrls.length})
+                                        </Typography>
+                                        <Stack direction="row" spacing={1} sx={{ mb: galleryUrls.length > 0 ? 1 : 0 }}>
+                                            <TextField
+                                                size="small"
+                                                fullWidth
+                                                placeholder="https://images.unsplash.com/..."
+                                                value={newGalleryUrl}
+                                                onChange={(e) => setNewGalleryUrl(e.target.value)}
+                                            />
+                                            <Button
+                                                type="button"
+                                                size="small"
+                                                onClick={handleAddGalleryUrl}
+                                                disabled={!newGalleryUrl.trim().startsWith('http')}
+                                                sx={{
+                                                    backgroundColor: '#425A8B',
+                                                    color: '#FFFFFF',
+                                                    fontWeight: 700,
+                                                    textTransform: 'none',
+                                                    px: 2,
+                                                    flexShrink: 0,
+                                                    '&:hover': { backgroundColor: '#2B3E66' },
+                                                }}
+                                            >
+                                                + Añadir URL
+                                            </Button>
+                                        </Stack>
+                                        {galleryUrls.length > 0 && (
+                                            <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
+                                                {galleryUrls.map((gUrl, idx) => (
+                                                    <Stack
+                                                        key={idx}
+                                                        direction="row"
+                                                        spacing={0.5}
+                                                        sx={{
+                                                            alignItems: 'center',
+                                                            p: 0.5,
+                                                            pr: 1,
+                                                            borderRadius: '6px',
+                                                            backgroundColor: '#FFFFFF',
+                                                            border: '1px solid #D5DFE4',
+                                                        }}
+                                                    >
+                                                        <Box
+                                                            component="img"
+                                                            src={gUrl}
+                                                            alt={`Extra ${idx + 1}`}
+                                                            sx={{ width: 32, height: 32, objectFit: 'cover', borderRadius: '4px' }}
+                                                        />
+                                                        <IconButton
+                                                            size="small"
+                                                            color="error"
+                                                            onClick={() => handleRemoveGalleryUrl(gUrl)}
+                                                        >
+                                                            <DeleteOutlineRounded fontSize="small" />
+                                                        </IconButton>
+                                                    </Stack>
+                                                ))}
+                                            </Stack>
+                                        )}
+                                    </Box>
 
                                     <Controller
                                         name="description"

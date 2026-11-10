@@ -16,6 +16,7 @@ import { GetCatalogProductUseCase } from "./application/get-catalog-product.usec
 import { UpdateVariantUseCase } from "./application/update-variant.usecase.js";
 import { AdjustVariantStockUseCase } from "./application/adjust-variant-stock.usecase.js";
 import { ToggleProductStatusUseCase } from "./application/toggle-product-status.usecase.js";
+import { ListKardexMovementsUseCase } from "./application/list-kardex-movements.usecase.js";
 
 function createMockCatalogMssqlPool() {
     const categories = new Map<string, CategoryDbRow>();
@@ -203,6 +204,16 @@ function createMockCatalogMssqlPool() {
                                 );
                                 if (pVars.length === 0) continue;
 
+                                const totalAvail = pVars.reduce(
+                                    (acc, v) =>
+                                        acc +
+                                        (v.stock_physical - v.stock_reserved),
+                                    0
+                                );
+                                if (inputs.p_in_stock && totalAvail <= 0) {
+                                    continue;
+                                }
+
                                 matchingProds.push({
                                     ...p,
                                     min_price: Math.min(
@@ -211,13 +222,7 @@ function createMockCatalogMssqlPool() {
                                     max_price: Math.max(
                                         ...pVars.map((v) => Number(v.price))
                                     ),
-                                    total_stock_available: pVars.reduce(
-                                        (acc, v) =>
-                                            acc +
-                                            (v.stock_physical -
-                                                v.stock_reserved),
-                                        0
-                                    ),
+                                    total_stock_available: totalAvail,
                                     variants_count: pVars.length,
                                     total_count: activeProds.length,
                                 });
@@ -228,6 +233,66 @@ function createMockCatalogMssqlPool() {
                                 recordset: matchingProds,
                                 recordsets: [matchingProds, matchingVars],
                             };
+                        }
+
+                        case "SP_Productos_SincronizarImagenes": {
+                            const p = products.get(inputs.p_product_id);
+                            if (p && inputs.p_images_json) {
+                                p.images_json = inputs.p_images_json;
+                            }
+                            return { recordset: [] };
+                        }
+
+                        case "SP_Kardex_ListarMovimientos": {
+                            const filtered = kardexMovements
+                                .filter((m) => {
+                                    if (
+                                        inputs.p_variant_id &&
+                                        m.variant_id !== inputs.p_variant_id
+                                    ) {
+                                        return false;
+                                    }
+                                    if (
+                                        inputs.p_movement_type &&
+                                        m.movement_type !==
+                                            inputs.p_movement_type
+                                    ) {
+                                        return false;
+                                    }
+                                    const v = variants.get(m.variant_id);
+                                    if (
+                                        inputs.p_product_id &&
+                                        v?.product_id !== inputs.p_product_id
+                                    ) {
+                                        return false;
+                                    }
+                                    return true;
+                                })
+                                .map((m, idx) => {
+                                    const v = variants.get(m.variant_id);
+                                    const p = v
+                                        ? products.get(v.product_id)
+                                        : undefined;
+                                    return {
+                                        id: `kardex-${idx + 1}`,
+                                        variant_id: m.variant_id,
+                                        sku: v?.sku ?? "",
+                                        attributes: v?.attributes ?? null,
+                                        product_id: p?.id ?? "",
+                                        product_name: p?.name ?? "",
+                                        user_id: null,
+                                        user_name: "Administrador Sistema",
+                                        user_email: "admin@shopcart.com",
+                                        movement_type: m.movement_type,
+                                        quantity: m.quantity,
+                                        previous_stock: m.previous_stock,
+                                        new_stock: m.new_stock,
+                                        reason: m.reason,
+                                        created_at: new Date(),
+                                        total_count: kardexMovements.length,
+                                    };
+                                });
+                            return { recordset: filtered };
                         }
 
                         case "SP_Productos_ActualizarVariante": {
@@ -262,7 +327,10 @@ function createMockCatalogMssqlPool() {
                             const prev = v.stock_physical;
                             const qty = Number(inputs.p_quantity);
                             let nextStock = prev;
-                            if (inputs.p_movement_type === "ENTRADA") {
+                            if (
+                                inputs.p_movement_type === "ENTRADA" ||
+                                inputs.p_movement_type === "DEVOLUCION"
+                            ) {
                                 nextStock = prev + Math.abs(qty);
                             } else if (inputs.p_movement_type === "SALIDA") {
                                 nextStock = prev - Math.abs(qty);
@@ -343,6 +411,9 @@ async function runProductsCatalogKardexTests() {
     const toggleProductStatusUseCase = new ToggleProductStatusUseCase(
         repository
     );
+    const listKardexMovementsUseCase = new ListKardexMovementsUseCase(
+        repository
+    );
 
     // 1. Create Category & Prevent Duplicate Category Name
     const category = await createCategoryUseCase.execute({
@@ -363,15 +434,19 @@ async function runProductsCatalogKardexTests() {
         }
     }
     assert.equal(duplicateRejected, true, "Duplicate category must return 409");
-    console.log("✅ [1/6] Category creation and uniqueness validated.");
+    console.log("✅ [1/7] Category creation and uniqueness validated.");
 
-    // 2. Create Product with Multiple Variants & Initial Kardex Movements
+    // 2. Create Product with Multiple Variants, Multi-Image Gallery & Initial Kardex Movements
     const createdProduct = await createProductUseCase.execute({
         categoryId: category.id,
         name: "Samsung Galaxy S22 Ultra 8K Camera & Video",
         description: "8K SUPER STEADY VIDEO\nNIGHTOGRAPHY + PORTRAIT MODE",
         mainImageUrl:
             "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c",
+        imageUrls: [
+            "https://images.unsplash.com/photo-1610945415295-d9bbf067e59c",
+            "https://images.unsplash.com/photo-1517336714731-489689fd1ca8",
+        ],
         variants: [
             {
                 sku: "SGS22U-PK-512",
@@ -397,15 +472,16 @@ async function runProductsCatalogKardexTests() {
     });
 
     assert.equal(createdProduct.variants.length, 2);
+    assert.equal(createdProduct.imageUrls.length, 2);
     assert.equal(createdProduct.minPrice, 2299.0);
     assert.equal(createdProduct.maxPrice, 2899.0);
     assert.equal(createdProduct.totalStockAvailable, 34);
     assert.equal(mockPool.kardexMovements.length, 2);
     console.log(
-        "✅ [2/6] Product created with 2 variants and initial Kardex ENTRADA movements."
+        "✅ [2/7] Product created with 2 variants, multi-image gallery, and initial Kardex ENTRADA movements."
     );
 
-    // 3. Public Catalog Listing & Category Product Count
+    // 3. Public Catalog Listing (with inStock filter) & Category Product Count
     const categoriesWithCount = await listCategoriesUseCase.execute(true);
     assert.equal(categoriesWithCount[0]?.productCount, 1);
 
@@ -413,11 +489,13 @@ async function runProductsCatalogKardexTests() {
         page: 1,
         limit: 12,
         categoryId: category.id,
+        inStock: true,
     });
     assert.equal(catalogResult.data.length, 1);
     assert.equal(catalogResult.data[0]?.variants.length, 2);
+    assert.equal(catalogResult.data[0]?.imageUrls.length, 2);
     console.log(
-        "✅ [3/6] Public catalog listing and category counters verified."
+        "✅ [3/7] Public catalog listing (including inStock filter & imageUrls) and category counters verified."
     );
 
     // 4. Variant Price Update
@@ -426,7 +504,7 @@ async function runProductsCatalogKardexTests() {
         price: 2499.0,
     });
     assert.equal(updatedVariant.price, 2499.0);
-    console.log("✅ [4/6] Variant price update verified.");
+    console.log("✅ [4/7] Variant price update verified.");
 
     // 5. Kardex Stock Adjustment & Negative Stock Prevention
     const afterSalida = await adjustVariantStockUseCase.execute({
@@ -456,10 +534,26 @@ async function runProductsCatalogKardexTests() {
         "Negative physical stock must be blocked with 409 INSUFFICIENT_STOCK"
     );
     console.log(
-        "✅ [5/6] Kardex stock adjustment and negative stock prevention verified."
+        "✅ [5/7] Kardex stock adjustment and negative stock prevention verified."
     );
 
-    // 6. Soft Delete Product & Hide from Public Catalog
+    // 6. Kardex History Query (SP_Kardex_ListarMovimientos)
+    const kardexHistory = await listKardexMovementsUseCase.execute({
+        page: 1,
+        limit: 15,
+        productId: createdProduct.id,
+    });
+    assert.equal(kardexHistory.data.length, 3);
+    const salidaHistory = await listKardexMovementsUseCase.execute({
+        page: 1,
+        limit: 15,
+        movementType: "SALIDA",
+    });
+    assert.equal(salidaHistory.data.length, 1);
+    assert.equal(salidaHistory.data[0]?.sku, "SGS22U-PK-512");
+    console.log("✅ [6/7] Kardex history listing and filtering verified.");
+
+    // 7. Soft Delete Product & Hide from Public Catalog
     await toggleProductStatusUseCase.execute(createdProduct.id, false);
     let inactiveHidden = false;
     try {
@@ -475,11 +569,11 @@ async function runProductsCatalogKardexTests() {
         "Soft-deleted product must return 404 in public catalog"
     );
     console.log(
-        "✅ [6/6] Product soft-delete hides product from public storefront."
+        "✅ [7/7] Product soft-delete hides product from public storefront."
     );
 
     console.log(
-        "\n🎉 ALL 6 PRODUCTS, VARIANTS & KARDEX TEST CASES PASSED SUCCESSFULLY!"
+        "\n🎉 ALL 7 PRODUCTS, VARIANTS & KARDEX TEST CASES PASSED SUCCESSFULLY!"
     );
 }
 

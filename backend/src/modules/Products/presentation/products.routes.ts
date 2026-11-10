@@ -68,6 +68,12 @@ router.get(
 );
 
 router.get(
+    "/kardex",
+    authMiddleware.checkRole(["Administrador", "Operador"]),
+    productsController.listKardexMovements
+);
+
+router.get(
     "/:id",
     authMiddleware.checkRole(["Administrador", "Operador"]),
     validatedMiddleware.validateParams(ProductIdParamSchema),

@@ -25,9 +25,12 @@ export interface AdminProductDto {
     name: string;
     description: string | null;
     mainImageUrl: string | null;
+    imageUrls?: string[];
     isActive: boolean;
     minPrice: number;
     maxPrice: number;
+    totalStockPhysical?: number;
+    totalStockReserved?: number;
     totalStockAvailable: number;
     variantsCount: number;
     variants: AdminProductVariantDto[];
@@ -48,6 +51,7 @@ export interface CreateProductPayload {
     name: string;
     description?: string | null;
     mainImageUrl?: string | null;
+    imageUrls?: string[];
     variants: CreateVariantInput[];
 }
 
@@ -56,11 +60,12 @@ export interface UpdateProductPayload {
     name?: string;
     description?: string | null;
     mainImageUrl?: string | null;
+    imageUrls?: string[];
     isActive?: boolean;
     variants?: CreateVariantInput[];
 }
 
-export type StockMovementType = 'ENTRADA' | 'SALIDA' | 'AJUSTE';
+export type StockMovementType = 'ENTRADA' | 'SALIDA' | 'AJUSTE' | 'DEVOLUCION';
 
 export interface AdjustStockPayload {
     movementType: StockMovementType;
@@ -71,4 +76,28 @@ export interface AdjustStockPayload {
 export interface CreateCategoryPayload {
     name: string;
     description?: string | null;
+}
+
+export interface UpdateCategoryPayload {
+    name?: string;
+    description?: string | null;
+    isActive?: boolean;
+}
+
+export interface KardexMovementDto {
+    id: string;
+    variantId: string;
+    sku: string;
+    attributes: Record<string, string>;
+    productId: string;
+    productName: string;
+    userId: string | null;
+    userName: string | null;
+    userEmail: string | null;
+    movementType: StockMovementType;
+    quantity: number;
+    previousStock: number;
+    newStock: number;
+    reason: string;
+    createdAt: string;
 }
